@@ -1,0 +1,14 @@
+featurize:
+    dataset: renault_sync
+    window_size: 10
+    overlap: 0
+    timestamp_column: Timestamp
+    columns:
+        - OP390_NC_SP_Torque
+
+cluster:
+    learning_method: minibatchkmeans
+    n_clusters: 4
+    max_iter: 100
+
+evaluate:

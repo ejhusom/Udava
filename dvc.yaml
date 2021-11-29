@@ -1,0 +1,35 @@
+stages:
+
+    featurize:
+        cmd: python3 src/featurize.py assets/data/raw/
+        deps:
+            - assets/data/raw
+            - src/featurize.py
+            - src/config.py
+        outs:
+            - assets/data/featurized
+        params:
+            - featurize.dataset
+
+    cluster:
+        cmd: python3 src/cluster.py assets/data/featurized/
+        deps:
+            - assets/data/featurized
+            - src/cluster.py
+            - src/config.py
+        params:
+            - cluster.learning_method
+
+    # evaluate:
+    #     cmd: python3 src/evaluate.py assets/models/model.h5 assets/data/featurized/
+    #     deps:
+    #         - assets/data/featurized
+    #         - assets/models/model.h5
+    #         - src/evaluate.py
+    #         - src/config.py
+    #     outs:
+    #     - assets/predictions/predictions.csv
+    #     - assets/predictions/true_values.csv
+    #     metrics:
+    #     - assets/metrics/metrics.json
+
