@@ -84,3 +84,4 @@ assets/predictions/
 assets/features/
 model_tuning/
 models/
+*.pkl
