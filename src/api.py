@@ -36,14 +36,25 @@ app.config["DEBUG"] = True
 def home():
     return flask.render_template("index.html")
 
+@app.route("/create_model_form")
+def create_model_form():
+
+    models = get_models()
+
+    return flask.render_template(
+            "create_model_form.html",
+            length=len(models),
+            models=models
+    )
+
 @app.route("/inference")
 def inference():
 
-    virtual_sensors = get_virtual_sensors()
+    models = get_models()
 
     return flask.render_template(
             "inference.html",
-            virtual_sensors=virtual_sensors
+            models=models
     )
 
 @app.route("/result")
@@ -56,26 +67,25 @@ def result(plot_div):
 def prediction():
     return flask.render_template("prediction.html")
 
-def get_virtual_sensors():
+def get_models():
 
     try:
-        virtual_sensors = json.load(open("virtual_sensors.json"))
+        models = json.load(open("models.json"))
     except:
-        virtual_sensors = {}
+        models = {}
 
-    return virtual_sensors
+    return models
 
-class CreateVirtualSensor(Resource):
+class CreateModel(Resource):
     def get(self):
 
         try:
-            virtual_sensors = json.load(open("virtual_sensors.json"))
+            virtual_sensors = json.load(open("models.json"))
             return virtual_sensors, 200
         except:
-            return {"message": "No virtual sensors exist."}, 401
+            return {"message": "No models exist."}, 401
 
     def post(self):
-
 
         try:
             # Read params file
@@ -83,19 +93,17 @@ class CreateVirtualSensor(Resource):
             params = yaml.safe_load(params_file)
         except:
             params = yaml.safe_load(open("params_default.yaml"))
-            params["profile"]["dataset"] = flask.request.form["dataset"]
-            params["clean"]["target"]= flask.request.form["target"]
-            params["train"]["learning_method"]= flask.request.form["learning_method"]
-            params["split"]["train_split"] = float(flask.request.form["train_split"]) / 10
+            params["featurize"]["dataset"] = flask.request.form["dataset"]
+            params["featurize"]["columns"]= flask.request.form["column"]
+            params["cluster"]["learning_method"]= flask.request.form["learning_method"]
             print(params)
 
         # Create dict containing all metadata about virtual sensor
-        virtual_sensor_metadata = {}
+        model_metadata = {}
         # The ID of the virtual sensor is set to the current Unix time for
         # uniqueness.
-        virtual_sensor_id = int(time.time())
-        virtual_sensor_metadata["id"] = virtual_sensor_id
-        virtual_sensor_metadata["params"] = params
+        model_metadata["id"] = int(time.time())
+        model_metadata["params"] = params
 
         # Save params to be used by DVC when creating virtual sensor.
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
@@ -107,16 +115,16 @@ class CreateVirtualSensor(Resource):
         virtual_sensor_metadata["metrics"] = metrics
 
         try:
-            virtual_sensors = json.load(open("virtual_sensors.json"))
+            models = json.load(open("models.json"))
         except:
-            virtual_sensors = {}
+            models = {}
 
-        virtual_sensors[virtual_sensor_id] = virtual_sensor_metadata
-        print(virtual_sensors)
+        models[model_id] = model_metadata
+        print(models)
 
-        json.dump(virtual_sensors, open("virtual_sensors.json", "w+"))
+        json.dump(models, open("models.json", "w+"))
 
-        return flask.redirect("virtual_sensors")
+        return flask.redirect("create_model_form")
 
 
 class Infer(Resource):
@@ -148,6 +156,6 @@ class Infer(Resource):
 
 if __name__ == "__main__":
 
-    api.add_resource(CreateVirtualSensor, "/create_virtual_sensor")
+    api.add_resource(CreateModel, "/create_model")
     api.add_resource(Infer, "/infer")
     app.run()

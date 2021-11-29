@@ -3,17 +3,16 @@
     <head>
         <meta charset="UTF-8">
         <title>UDAVA - Unsupervised learning for data validation</title>
-        <link href="style.css" rel="stylesheet" type="text/css" title="Stylesheet">
+        <link href="{{ url_for('static', filename='style.css')}}" rel="stylesheet" type="text/css" title="Stylesheet">
+        <link rel="icon" type="image/png" href="static/favicon.png">
     </head>
 
-    
     <body>
         <header>
-            <h1>UDAVA - Unsupervised learning for data validation</h1>
-            <p>SINTEF Digital</p>
+            {% include "header.html" %}
         </header>
 
-        <!-- <a href="virtual_sensors">Virtual sensors</a> -->
+        {% include "models_overview.html" %}
   
         <footer>
 
