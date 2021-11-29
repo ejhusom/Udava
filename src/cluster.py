@@ -10,7 +10,10 @@ Created:
 
 """
 import sys
+import yaml
 
+import numpy as np
+import pandas as pd
 from joblib import dump
 from sklearn.cluster import (
     DBSCAN,
@@ -23,6 +26,7 @@ from sklearn.cluster import (
 )
 
 from config import *
+from preprocess_utils import find_files, move_column
 
 def cluster(dir_path=""):
 
@@ -40,9 +44,9 @@ def cluster(dir_path=""):
     labels, model = fit_predict(fingerprints, model)
     distances_to_centers, sum_distance_to_centers = calculate_distances(fingerprints, model)
 
+    MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     PREDICTIONS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(PREDICTIONS_PATH / "labels.csv")
-
 
     dump(model, MODELS_FILE_PATH)
 
@@ -93,4 +97,4 @@ def calculate_distances(fingerprints, model):
 
 if __name__ == '__main__':
 
-    cluster(sys_argv[1])
+    cluster(sys.argv[1])

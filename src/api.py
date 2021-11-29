@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""REST API for Erdre.
+"""API for Udava.
 
 Author:
     Erik Johannes Husom
 
 Created:
-    2021-11-10 Wednesday 11:22:39
+    2021-11-29 Monday 14:48:42 
 
 """
 import os
@@ -26,9 +26,7 @@ import yaml
 from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
-from config import METRICS_FILE_PATH
-from evaluate import plot_prediction
-from virtualsensor import VirtualSensor
+from udava import Udava
 
 app = flask.Flask(__name__)
 api = Api(app)
@@ -37,17 +35,6 @@ app.config["DEBUG"] = True
 @app.route("/")
 def home():
     return flask.render_template("index.html")
-
-@app.route("/virtual_sensors")
-def virtual_sensors():
-
-    virtual_sensors = get_virtual_sensors()
-
-    return flask.render_template(
-            "virtual_sensors.html",
-            length=len(virtual_sensors),
-            virtual_sensors=virtual_sensors
-    )
 
 @app.route("/inference")
 def inference():
@@ -77,7 +64,6 @@ def get_virtual_sensors():
         virtual_sensors = {}
 
     return virtual_sensors
-
 
 class CreateVirtualSensor(Resource):
     def get(self):
@@ -139,65 +125,25 @@ class Infer(Resource):
 
     def post(self):
 
-        virtual_sensor_id = flask.request.form["id"]
+        # virtual_sensor_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
         inference_df = pd.read_csv(csv_file)
+        print("File is read.")
 
-        virtual_sensors = get_virtual_sensors()
-        virtual_sensor = virtual_sensors[virtual_sensor_id]
-        params = virtual_sensor["params"]
+        analysis = Udava(inference_df)
+        analysis.create_train_test_set(["OP390_NC_SP_Torque"])
+        analysis.create_fingerprints()
+        print("Fingerprints have been created.")
+        analysis.load_model("model.pkl")
+        print("Loading model done.")
+        analysis.predict()
+        print("Done with prediction.")
+        analysis.visualize_clusters()
+        analysis.plot_labels_over_time()
+        analysis.plot_cluster_center_distance()
+        print("Done with plotting.")
 
-        vs = VirtualSensor(params_file=params)
-
-        # Run DVC to fetch correct assets.
-        subprocess.run(["dvc", "repro"])
-
-        y_pred = vs.run_virtual_sensor(inference_df=inference_df)
-        window_size = params["sequentialize"]["window_size"]
-        original_target_values = inference_df[params["clean"]["target"]][::window_size]
-        print(y_pred.shape)
-        print(original_target_values.shape)
-
-        x = np.linspace(0, y_pred.shape[0] - 1, y_pred.shape[0])
-        x_orig = np.linspace(0, original_target_values.shape[0] - 1,
-                original_target_values.shape[0])
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-        if len(original_target_values.shape) > 1:
-            original_target_values = original_target_values[:, -1].reshape(-1)
-        if len(y_pred.shape) > 1:
-            y_pred = y_pred[:, -1].reshape(-1)
-
-        fig.add_trace(
-            go.Scatter(x=x_orig, y=original_target_values, name="original"),
-            secondary_y=False,
-        )
-
-        fig.add_trace(
-            go.Scatter(x=x, y=y_pred, name="pred"),
-            secondary_y=False,
-        )
-        fig.update_layout(title_text="Original vs predictions")
-        fig.update_xaxes(title_text="time step")
-        fig.update_yaxes(title_text="target variable", secondary_y=False)
-        fig.write_html("src/templates/prediction.html")
-
-        # plot_div = plotly.offline.plot([
-        #     go.Scatter(
-        #         x=np.linspace(0, len(y_pred)),
-        #         y=y_pred
-        #     )],
-        #     output_type="div",
-        #     include_plotlyjs=True
-        # )
-        # print(plot_div)
-
-        # flask.session["plot_div"] = plot_div
-
-        # return flask.redirect(flask.url_for("result", plot_div=plot_div))
         return flask.redirect("prediction")
-        # return flask.render_template("inference.html",
-        #         virtual_sensors=virtual_sensors, plot_div=plot_div)
 
 
 if __name__ == "__main__":

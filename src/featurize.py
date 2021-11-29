@@ -62,7 +62,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
     else:
         filepaths = find_files(dir_path, file_extension=".csv")
 
-        dfs = []
+        featurized_dfs = []
 
         DATA_FEATURIZED_PATH.mkdir(parents=True, exist_ok=True)
         SCALER_PATH.mkdir(parents=True, exist_ok=True)
@@ -72,20 +72,21 @@ def featurize(dir_path="", inference=False, inference_df=None):
             # Read csv
             df = pd.read_csv(filepath, index_col=0)
 
-            df = _featurize(df, columns, window_size, overlap,
+            featurized_df = _featurize(df, columns, window_size, overlap,
                     timestamp_column)
 
-            dfs.append(df)
+            featurized_dfs.append(df)
 
-        combined_df = pd.concat(dfs)
+        combined_df = pd.concat(featurized_dfs)
 
         scaler = StandardScaler()
-        combined_df = scaler.fit_transform(combined_df)
+        scaled_df = scaler.fit_transform(combined_df)
         joblib.dump(scaler, INPUT_SCALER_PATH)
 
         np.save(
             DATA_FEATURIZED_PATH / "featurized.npy",
-            combined_df.to_numpy(),
+            # combined_df.to_numpy(),
+            scaled_df
         )
 
 
@@ -112,15 +113,12 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
         elif not is_numeric_dtype(df[col]):
             del df[col]
 
-    print(df)
-
     features, fingerprint_timestamps = _create_fingerprints(df,
             df.index,
             window_size, overlap)
 
     df = pd.DataFrame(features,
             index=fingerprint_timestamps[-len(features):])
-    print(df)
 
     return df
 
@@ -156,11 +154,21 @@ def _create_fingerprints(df, timestamps, window_size, overlap):
     else:
         step = window_size - overlap
 
+    feature_names = [
+            "mean",
+            "median",
+            "std",
+            # "rms",
+            "var",
+            "minmax",
+            "frequency"
+    ]
+
     # Initialize descriptive feature matrices
     mean = np.zeros((n_rows - 1, n_features))
     median = np.zeros((n_rows - 1, n_features))
     std = np.zeros((n_rows - 1, n_features))
-    rms = np.zeros((n_rows - 1, n_features))
+    # rms = np.zeros((n_rows - 1, n_features))
     var = np.zeros((n_rows - 1, n_features))
     minmax = np.zeros((n_rows - 1, n_features))
     frequency = np.zeros((n_rows - 1, n_features))

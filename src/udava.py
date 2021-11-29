@@ -12,6 +12,7 @@ Created:
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import joblib
 import pandas as pd
 import plotly.graph_objects as go
 import seaborn as sn
@@ -32,7 +33,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from config import *
 
-pd.options.plotting.backend = "plotly"
+# pd.options.plotting.backend = "plotly"
 
 class Udava:
 
@@ -43,7 +44,7 @@ class Udava:
         train_stop_idx=None,
         test_start_idx=None,
         test_stop_idx=None,
-        timestamp_column_name="Date"
+        timestamp_column_name="Timestamp"
     ):
 
         self.df = df
@@ -216,12 +217,28 @@ class Udava:
 
         return self.model
 
+    def load_model(self, filepath):
+
+        self.model = joblib.load(filepath)
+
     def fit_predict(self):
 
         if self.model is None:
             self.build_model()
 
         self.train_labels = self.model.fit_predict(self.train_fingerprints)
+        self.test_labels = self.model.predict(self.test_fingerprints)
+        self.clusters = np.unique(self.train_labels)
+
+        # Calculate distances to cluster centers for both train and test set
+        self.train_dist = self.model.transform(self.train_fingerprints)
+        self.test_dist = self.model.transform(self.test_fingerprints)
+        self.train_dist_sum = self.train_dist.sum(axis=1)
+        self.test_dist_sum = self.test_dist.sum(axis=1)
+
+    def predict(self):
+
+        self.train_labels = self.model.predict(self.train_fingerprints)
         self.test_labels = self.model.predict(self.test_fingerprints)
         self.clusters = np.unique(self.train_labels)
 
@@ -287,7 +304,7 @@ class Udava:
             )
 
             plt.savefig("visualize_clusters.png")
-            plt.show()
+            # plt.show()
 
     def plot_labels_over_time(self, data_set="train"):
 
@@ -408,7 +425,8 @@ class Udava:
         fig.update_yaxes(title_text="Cluster label number", secondary_y=False)
         fig.update_yaxes(title_text="Input unit", secondary_y=True)
 
-        fig.write_html(PLOTS_PATH / f"plot_{data_set}.html")
+        fig.write_html(f"src/templates/prediction.html")
+        # fig.write_html(PLOTS_PATH / f"plot_{data_set}.html")
 
     def plot_cluster_center_distance(self, data_set="train"):
 
@@ -471,16 +489,16 @@ if __name__ == "__main__":
 
     parser.add_argument('-d', '--data_file', help='data file', required=True)
     parser.add_argument('-t', '--timestamp_column_name',
-            help='file containing predictions', default="Date")
+            help='file containing predictions', default="Timestamp")
     parser.add_argument('-n', '--column', help='Which column to use',
-            required=True)
+            default="OP390_NC_SP_Torque")
     parser.add_argument('-w', '--window_size', help='window size', default=100)
     parser.add_argument('-o', '--overlap', help='overlap', default=0)
     parser.add_argument('-c', '--n_clusters', help='Number of clusters', default=4)
 
     args = parser.parse_args()
 
-    df = pd.read_csv(args.data_file, sep=None)
+    df = pd.read_csv(args.data_file)
 
     analysis = Udava(df, timestamp_column_name=args.timestamp_column_name)
     analysis.create_train_test_set(columns=[args.column])
@@ -488,4 +506,7 @@ if __name__ == "__main__":
             overlap=args.overlap)
     analysis.build_model(n_clusters=args.n_clusters)
     analysis.fit_predict()
+    joblib.dump(analysis.model, "model.pkl")
     analysis.visualize_clusters()
+    analysis.plot_labels_over_time()
+    analysis.plot_cluster_center_distance()
