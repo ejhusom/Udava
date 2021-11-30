@@ -80,8 +80,8 @@ class CreateModel(Resource):
     def get(self):
 
         try:
-            virtual_sensors = json.load(open("models.json"))
-            return virtual_sensors, 200
+            models = json.load(open("models.json"))
+            return models, 200
         except:
             return {"message": "No models exist."}, 401
 
@@ -98,7 +98,7 @@ class CreateModel(Resource):
             params["cluster"]["learning_method"]= flask.request.form["learning_method"]
             print(params)
 
-        # Create dict containing all metadata about virtual sensor
+        # Create dict containing all metadata about models
         model_metadata = {}
         # The ID of the virtual sensor is set to the current Unix time for
         # uniqueness.
@@ -112,7 +112,7 @@ class CreateModel(Resource):
         subprocess.run(["dvc", "repro"])
 
         metrics = json.load(open(METRICS_FILE_PATH))
-        virtual_sensor_metadata["metrics"] = metrics
+        model_metadata["metrics"] = metrics
 
         try:
             models = json.load(open("models.json"))
@@ -127,29 +127,66 @@ class CreateModel(Resource):
         return flask.redirect("create_model_form")
 
 
-class Infer(Resource):
+class InferDemo(Resource):
     def get(self):
         return 200
 
     def post(self):
 
-        # virtual_sensor_id = flask.request.form["id"]
+        # model_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
         inference_df = pd.read_csv(csv_file)
         print("File is read.")
 
+        # Running actual inference
         analysis = Udava(inference_df)
         analysis.create_train_test_set(["OP390_NC_SP_Torque"])
         analysis.create_fingerprints()
-        print("Fingerprints have been created.")
+        print("Creating features done.")
+
         analysis.load_model("model.pkl")
         print("Loading model done.")
         analysis.predict()
-        print("Done with prediction.")
-        analysis.visualize_clusters()
+        print("Prediction done.")
         analysis.plot_labels_over_time()
         analysis.plot_cluster_center_distance()
-        print("Done with plotting.")
+        print("Plotting done.")
+
+        return flask.redirect("prediction")
+
+class Infer(Resource):
+    def get(self):
+        return 200
+
+    def post(self):
+        
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument("inputVariables", required=True)
+        parser.add_argument("databaseToken", required=True)
+        parser.add_argument("numberOfClusters", required=False, default=4)
+        parser.add_argument("learningMethod", required=False, default="minibatchkmeans")
+        parser.add_argument("window_size", required=False, default=100)
+
+        # model_id = flask.request.form["id"]
+        csv_file = flask.request.files["file"]
+        inference_df = pd.read_csv(csv_file)
+        print("File is read.")
+
+        # Running actual inference
+        analysis = Udava(inference_df)
+        analysis.create_train_test_set(["OP390_NC_SP_Torque"])
+        analysis.create_fingerprints()
+        print("Creating features done.")
+
+        analysis.load_model("model.pkl")
+        print("Loading model done.")
+        analysis.predict()
+        print("Prediction done.")
+        analysis.plot_labels_over_time()
+        analysis.plot_cluster_center_distance()
+        print("Plotting done.")
 
         return flask.redirect("prediction")
 
@@ -157,5 +194,6 @@ class Infer(Resource):
 if __name__ == "__main__":
 
     api.add_resource(CreateModel, "/create_model")
+    api.add_resource(InferDemo, "/infer_demo")
     api.add_resource(Infer, "/infer")
     app.run()

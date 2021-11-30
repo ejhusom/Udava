@@ -1,0 +1,36 @@
+{
+    "reference": {
+        "inputVariables": [
+            "OP390_NC_X1_Position",
+            "OP390_NC_Y1_Position",
+            "OP390_NC_Z1_Position"
+        ],
+        "databaseToken": [
+            "Token": 1234,
+            "Org": "SINTEF",
+            "Bucket": 1234,
+            "URL": "https://example.org"
+        ],
+        "outputVariables": [
+            "ClusterName",
+            "ClusterCenter",
+            "Distance"
+        ],
+        "numberOfClusters": [
+            3  
+        ],
+        "clusteringAlgorithm": "kmeans",
+        "window_size": 100,
+        "timestampRange": [
+          1671613600,
+          1671613800
+        ]
+    },
+    "operation" : "clustering",
+    "query": {
+        "timestampRange": [
+          1671613600,
+          1671613800
+        ]
+    }
+}

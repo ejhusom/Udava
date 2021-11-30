@@ -1,0 +1,16 @@
+{
+    "response": {
+        "timeStampRanges": [
+            (234234, 2655335), 
+            (12123, 435554)
+        ],
+        "clusterName": [
+            "cluster1", 
+            "cluster2"  
+        ],
+        "clusterCenters": [ 
+            (0, 1),
+            (1, 0)
+        ]
+    }
+}

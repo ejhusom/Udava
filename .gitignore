@@ -8,7 +8,7 @@ build*
 *.dat
 *.txt
 *.csv
-*.json
+# *.json
 
 # doconce:
 .*_html_file_collection

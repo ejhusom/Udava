@@ -35,6 +35,5 @@ if __name__ == "__main__":
             overlap=args.overlap)
     analysis.load_model("model.pkl")
     analysis.predict()
-    analysis.visualize_clusters()
     analysis.plot_labels_over_time()
     analysis.plot_cluster_center_distance()

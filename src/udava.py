@@ -286,7 +286,7 @@ class Udava:
                 c="black",
                 edgecolors="white"
             )
-            plt.show()
+            # plt.show()
         else:
             fig = plt.figure(figsize=(10,10))
             ax = plt.axes(projection ='3d')
