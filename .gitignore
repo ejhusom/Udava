@@ -8,7 +8,9 @@ build*
 *.dat
 *.txt
 *.csv
+*.npy
 # *.json
+models.json
 
 # doconce:
 .*_html_file_collection

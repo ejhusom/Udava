@@ -58,10 +58,13 @@ METRICS_PATH = ASSETS_PATH / "metrics"
 METRICS_FILE_PATH = METRICS_PATH / "metrics.json"
 """Path to file containing metrics."""
 
+OUTPUT_PATH = ASSETS_PATH / "output"
+"""Path to all output related to the cluster model."""
+
 PREDICTIONS_PATH = ASSETS_PATH / "predictions"
 """Path to folder containing predictions file."""
 
-PREDICTIONS_FILE_PATH = PREDICTIONS_PATH / "predictions.csv"
+PREDICTIONS_FILE_PATH = PREDICTIONS_PATH / "labels.csv"
 """Path to file containing predictions."""
 
 PLOTS_PATH = ASSETS_PATH / "plots"

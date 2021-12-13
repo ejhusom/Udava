@@ -141,11 +141,7 @@ class Udava:
         n_rows_raw = df.shape[0]
         n_rows = n_rows_raw // window_size
 
-        if overlap == 0:
-            step = window_size
-        else:
-            step = window_size - overlap
-
+        step = window_size - overlap
         self.step = step
 
         # Initialize descriptive feature matrices
@@ -257,7 +253,6 @@ class Udava:
 
         self.train_distance_to_cluster_center = distances
 
-
     def visualize_clusters(self, dim1=0, dim2=1, dim3=None, width=10, height=10):
         """Plot data point and cluster centers in a reduced feature space.
 
@@ -269,6 +264,9 @@ class Udava:
                 be in 3D.
 
         """
+        print(self.train_labels)
+        print("CLUSTERS")
+        print(self.clusters)
 
         if dim3 is None:
             plt.figure(figsize=(width, height))
@@ -276,6 +274,9 @@ class Udava:
             for cluster in self.clusters:
                 current_cluster_indeces = np.where(self.train_labels == cluster)
                 current_cluster_points = self.train_fingerprints[current_cluster_indeces]
+
+                print(current_cluster_points.shape)
+                print(current_cluster_points)
                 plt.scatter(current_cluster_points[:, dim1], current_cluster_points[:, dim2])
 
             # plt.scatter(self.train_fingerprints[:, dim1], self.train_fingerprints[:, dim2])
@@ -484,17 +485,16 @@ class Udava:
 
 if __name__ == "__main__":
 
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-d', '--data_file', help='data file', required=True)
     parser.add_argument('-t', '--timestamp_column_name',
             help='file containing predictions', default="Timestamp")
-    parser.add_argument('-n', '--column', help='Which column to use',
+    parser.add_argument('-c', '--column', help='Which column to use',
             default="OP390_NC_SP_Torque")
     parser.add_argument('-w', '--window_size', help='window size', default=100)
     parser.add_argument('-o', '--overlap', help='overlap', default=0)
-    parser.add_argument('-c', '--n_clusters', help='Number of clusters', default=4)
+    parser.add_argument('-n', '--n_clusters', help='Number of clusters', default=4)
 
     args = parser.parse_args()
 

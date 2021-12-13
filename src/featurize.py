@@ -55,15 +55,21 @@ def featurize(dir_path="", inference=False, inference_df=None):
             inference_df,
             columns,
             window_size,
-            overlap
+            overlap,
+            timestamp_column
         )
+
+
 
         return df
     else:
         filepaths = find_files(dir_path, file_extension=".csv")
 
+        dfs = []
         featurized_dfs = []
+        # timestamps = np.array([])
 
+        OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
         DATA_FEATURIZED_PATH.mkdir(parents=True, exist_ok=True)
         SCALER_PATH.mkdir(parents=True, exist_ok=True)
 
@@ -72,22 +78,34 @@ def featurize(dir_path="", inference=False, inference_df=None):
             # Read csv
             df = pd.read_csv(filepath, index_col=0)
 
+            # timestamps = np.concatenate([timestamps, df.index])
+
             featurized_df = _featurize(df, columns, window_size, overlap,
                     timestamp_column)
 
-            featurized_dfs.append(df)
 
-        combined_df = pd.concat(featurized_dfs)
+            dfs.append(df)
+            featurized_dfs.append(featurized_df)
+
+        combined_df = pd.concat(dfs)
+        combined_featurized_df = pd.concat(featurized_dfs)
+        fp_timestamps = combined_featurized_df.index
+
+        OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+
+        # Save the timestamps for each fingerprint, in order to use it for
+        # plotting later.
+        np.save(
+                OUTPUT_PATH / "fingerprint_timestamps.npy",
+                fp_timestamps
+        )
 
         scaler = StandardScaler()
-        scaled_df = scaler.fit_transform(combined_df)
+        scaled = scaler.fit_transform(combined_featurized_df.to_numpy())
         joblib.dump(scaler, INPUT_SCALER_PATH)
 
-        np.save(
-            DATA_FEATURIZED_PATH / "featurized.npy",
-            # combined_df.to_numpy(),
-            scaled_df
-        )
+        combined_df.to_csv(OUTPUT_PATH / "combined.csv")
+        np.save(DATA_FEATURIZED_PATH / "featurized.npy", scaled)
 
 
 def _featurize(df, columns, window_size, overlap, timestamp_column):
@@ -120,6 +138,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
     df = pd.DataFrame(features,
             index=fingerprint_timestamps[-len(features):])
 
+    # return features, fingerprint_timestamps
     return df
 
 
@@ -149,10 +168,7 @@ def _create_fingerprints(df, timestamps, window_size, overlap):
     n_rows_raw = df.shape[0]
     n_rows = n_rows_raw // window_size
 
-    if overlap == 0:
-        step = window_size
-    else:
-        step = window_size - overlap
+    step = window_size - overlap
 
     feature_names = [
             "mean",

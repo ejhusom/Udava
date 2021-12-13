@@ -87,6 +87,7 @@ class CreateModel(Resource):
 
     def post(self):
 
+
         try:
             # Read params file
             params_file = flask.request.files["file"]
@@ -94,15 +95,17 @@ class CreateModel(Resource):
         except:
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
-            params["featurize"]["columns"]= flask.request.form["column"]
+            params["featurize"]["columns"]= flask.request.form["target"]
             params["cluster"]["learning_method"]= flask.request.form["learning_method"]
+            params["cluster"]["n_clusters"]= flask.request.form["n_clusters"]
             print(params)
 
         # Create dict containing all metadata about models
         model_metadata = {}
         # The ID of the virtual sensor is set to the current Unix time for
         # uniqueness.
-        model_metadata["id"] = int(time.time())
+        model_id = int(time.time())
+        model_metadata["id"] = model_id
         model_metadata["params"] = params
 
         # Save params to be used by DVC when creating virtual sensor.
@@ -111,8 +114,9 @@ class CreateModel(Resource):
         # Run DVC to create virtual sensor.
         subprocess.run(["dvc", "repro"])
 
-        metrics = json.load(open(METRICS_FILE_PATH))
-        model_metadata["metrics"] = metrics
+        # TODO: Compute metrics
+        # metrics = json.load(open(METRICS_FILE_PATH))
+        # model_metadata["metrics"] = metrics
 
         try:
             models = json.load(open("models.json"))
@@ -161,32 +165,27 @@ class Infer(Resource):
     def post(self):
         
 
-        parser = reqparse.RequestParser()
+        # parser = reqparse.RequestParser()
 
-        parser.add_argument("inputVariables", required=True)
-        parser.add_argument("databaseToken", required=True)
-        parser.add_argument("numberOfClusters", required=False, default=4)
-        parser.add_argument("learningMethod", required=False, default="minibatchkmeans")
-        parser.add_argument("window_size", required=False, default=100)
+        # parser.add_argument("inputVariables", required=True)
+        # parser.add_argument("databaseToken", required=True)
+        # parser.add_argument("numberOfClusters", required=False, default=4)
+        # parser.add_argument("learningMethod", required=False, default="minibatchkmeans")
+        # parser.add_argument("window_size", required=False, default=100)
 
-        # model_id = flask.request.form["id"]
+        model_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
         inference_df = pd.read_csv(csv_file)
         print("File is read.")
 
-        # Running actual inference
-        analysis = Udava(inference_df)
-        analysis.create_train_test_set(["OP390_NC_SP_Torque"])
-        analysis.create_fingerprints()
-        print("Creating features done.")
+        models = get_models()
+        model = models[model_id]
+        params = model["params"]
 
-        analysis.load_model("model.pkl")
-        print("Loading model done.")
-        analysis.predict()
-        print("Prediction done.")
-        analysis.plot_labels_over_time()
-        analysis.plot_cluster_center_distance()
-        print("Plotting done.")
+        vs = VirtualSensor(params_file=params)
+
+        # Run DVC to fetch correct assets.
+        subprocess.run(["dvc", "repro"])
 
         return flask.redirect("prediction")
 

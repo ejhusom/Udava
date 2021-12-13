@@ -45,8 +45,9 @@ def cluster(dir_path=""):
     distances_to_centers, sum_distance_to_centers = calculate_distances(fingerprints, model)
 
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PREDICTIONS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(labels).to_csv(PREDICTIONS_PATH / "labels.csv")
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
+    pd.DataFrame(fingerprints).to_csv(OUTPUT_PATH / "fingerprints.csv")
 
     dump(model, MODELS_FILE_PATH)
 

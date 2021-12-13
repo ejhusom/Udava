@@ -10,6 +10,7 @@ Created:
 
 """
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -29,6 +30,9 @@ from sklearn.cluster import (
 from mpl_toolkits import mplot3d
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import yaml
+
+from config import *
 
 
 def visualize_clusters(labels, fingerprints, model, dim1=0, dim2=1, dim3=None,
@@ -78,15 +82,20 @@ def visualize_clusters(labels, fingerprints, model, dim1=0, dim2=1, dim3=None,
         )
         plt.show()
 
-def plot_labels_over_time(fp_timestamps, labels, fingerprints, timestamps,
-        data):
+    PLOTS_PATH.mkdir(parents=True, exist_ok=True)
+    plt.savefig(PLOTS_PATH / "clusters.png")
+
+def plot_labels_over_time(fp_timestamps, labels, fingerprints,
+        original_data):
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
     window_size = params["featurize"]["window_size"]
+    overlap = params["featurize"]["overlap"]
+    columns = list(params["featurize"]["columns"])
 
-
+    step = window_size - overlap
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -96,24 +105,32 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints, timestamps,
     #     secondary_y=False,
     # )
 
-    n_features = fingerprints.shape[0]
+    # n_features = fingerprints.shape[0]
+    n_features = len(columns)
     n_labels = len(labels)
     colors = ["red", "green", "blue", "brown", "yellow", "purple", "grey",
             "black", "pink", "orange"]
 
+    timestamps = original_data.index
+    print(timestamps)
+    print(type(timestamps))
+    print(columns)
+    print(n_features)
+
     for i in range(n_features):
         for j in range(n_labels):
 
-            start = j * self.step
+            start = j * step
             stop = start + window_size
-            t = timestamps.iloc[start:stop]
+            # t = original_data.index.iloc[start:stop]
+            t = timestamps[start:stop]
 
             cluster = labels[j]
 
             fig.add_trace(
                 go.Scatter(
                     x=t,
-                    y=data[self.input_columns[i]].iloc[start:stop],
+                    y=original_data[columns[i]].iloc[start:stop],
                     # name=self.input_columns[i],
                     # mode="markers"
                     line=dict(color=colors[cluster]),
@@ -148,8 +165,8 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints, timestamps,
 
     fig.add_trace(
             go.Scatter(
-                x=timestamps[::self.step],
-                y=sum_dist
+                x=timestamps[::step],
+                y=sum_dist,
                 name="Distance sum",
             ),
             secondary_y=True,
@@ -161,24 +178,11 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints, timestamps,
     fig.update_yaxes(title_text="Cluster label number", secondary_y=False)
     fig.update_yaxes(title_text="Input unit", secondary_y=True)
 
-    fig.write_html(f"plot_{data_set}.html")
+    fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
 
-def plot_cluster_center_distance(self, data_set="train"):
+def plot_cluster_center_distance(fp_timestamps, fingerprints, model):
 
-    if data_set == "test":
-        start_idx = self.test_start_idx
-        stop_idx = self.test_stop_idx
-        X = self.test_fingerprints
-        timestamps = self.test_fp_timestamps
-    elif data_set == "train":
-        start_idx = self.train_start_idx
-        stop_idx = self.train_stop_idx
-        X = fingerprints
-        timestamps = self.train_fp_timestamps
-    else:
-        raise ValueError("Must specify train or test data set.")
-
-    dist = model.transform(X)
+    dist = model.transform(fingerprints)
     dist = dist.sum(axis=1)
     avg_dist = pd.Series(dist).rolling(50).mean()
 
@@ -187,9 +191,21 @@ def plot_cluster_center_distance(self, data_set="train"):
     plt.plot(avg_dist, label="avg_dist")
 
     plt.legend()
-    plt.plot()
-
-    # print(dist.shape)
-    # print(avg_dist.shape)
+    plt.show()
 
     return dist, avg_dist
+
+
+if __name__ == '__main__': 
+
+    labels = pd.read_csv(OUTPUT_PATH / "labels.csv").iloc[:,-1].to_numpy()
+    original_data = pd.read_csv(OUTPUT_PATH / "combined.csv", index_col=0)
+    fingerprints = np.load(DATA_FEATURIZED_PATH / "featurized.npy")
+    fingerprint_timestamps = np.load(OUTPUT_PATH /
+    "fingerprint_timestamps.npy")
+    model = joblib.load(MODELS_FILE_PATH)
+
+    visualize_clusters(labels, fingerprints, model)
+    plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
+            original_data)
+    plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)

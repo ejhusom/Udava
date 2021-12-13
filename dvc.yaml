@@ -8,6 +8,8 @@ stages:
             - src/config.py
         outs:
             - assets/data/featurized
+            - assets/output/fingerprint_timestamps.npy
+            - assets/output/combined.csv
         params:
             - featurize.dataset
 
@@ -17,19 +19,25 @@ stages:
             - assets/data/featurized
             - src/cluster.py
             - src/config.py
+        outs:
+            - assets/output/labels.csv
+            - assets/output/fingerprints.csv
         params:
             - cluster.learning_method
 
-    # evaluate:
-    #     cmd: python3 src/evaluate.py assets/models/model.h5 assets/data/featurized/
-    #     deps:
-    #         - assets/data/featurized
-    #         - assets/models/model.h5
-    #         - src/evaluate.py
-    #         - src/config.py
-    #     outs:
-    #     - assets/predictions/predictions.csv
-    #     - assets/predictions/true_values.csv
+    evaluate:
+        cmd: python3 src/evaluate.py
+        deps:
+            - assets/data/featurized
+            - assets/models/model.pkl
+            - assets/output/labels.csv
+            - assets/output/fingerprint_timestamps.npy
+            - assets/output/combined.csv
+            - src/evaluate.py
+            - src/config.py
+        outs:
+            - assets/plots/clusters.png
+            - assets/plots/labels_over_time.html
     #     metrics:
     #     - assets/metrics/metrics.json
 
