@@ -86,7 +86,7 @@ def visualize_clusters(labels, fingerprints, model, dim1=0, dim2=1, dim3=None,
     plt.savefig(PLOTS_PATH / "clusters.png")
 
 def plot_labels_over_time(fp_timestamps, labels, fingerprints,
-        original_data):
+        original_data, model):
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -205,11 +205,7 @@ if __name__ == '__main__':
     "fingerprint_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
-    print("=======")
-    print(fingerprints.shape)
-    print("=======")
-
     visualize_clusters(labels, fingerprints, model)
     plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-            original_data)
+            original_data, model)
     # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)

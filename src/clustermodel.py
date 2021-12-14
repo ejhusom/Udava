@@ -103,7 +103,7 @@ class ClusterModel:
 
         visualize_clusters(labels, fingerprints, model)
         plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-                df)
+                inference_df, model)
         plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
 
         return labels

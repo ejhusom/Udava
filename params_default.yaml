@@ -1,6 +1,6 @@
 featurize:
     dataset: renault_sync
-    window_size: 10
+    window_size: 100
     overlap: 0
     timestamp_column: Timestamp
     columns:

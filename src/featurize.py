@@ -60,7 +60,8 @@ def featurize(dir_path="", inference=False, inference_df=None):
             timestamp_column
         )
 
-        return df
+        return featurized_df
+
     else:
         filepaths = find_files(dir_path, file_extension=".csv")
 
