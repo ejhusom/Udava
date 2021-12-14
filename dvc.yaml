@@ -11,7 +11,11 @@ stages:
             - assets/output/fingerprint_timestamps.npy
             - assets/output/combined.csv
         params:
+            - featurize.columns
             - featurize.dataset
+            - featurize.overlap
+            - featurize.timestamp_column
+            - featurize.window_size
 
     cluster:
         cmd: python3 src/cluster.py assets/data/featurized/
@@ -24,6 +28,8 @@ stages:
             - assets/output/fingerprints.csv
         params:
             - cluster.learning_method
+            - cluster.max_iter
+            - cluster.n_clusters
 
     evaluate:
         cmd: python3 src/evaluate.py

@@ -4,8 +4,7 @@ featurize:
     overlap: 0
     timestamp_column: Timestamp
     columns:
-        # - column1
-        # - column2
+        - OP390_NC_SP_Torque
 
 cluster:
     learning_method: minibatchkmeans

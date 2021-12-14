@@ -335,6 +335,7 @@ class Udava:
         # )
 
         n_features = len(self.input_columns)
+        print(labels.shape)
         n_labels = len(labels)
         colors = ["red", "green", "blue", "brown", "yellow", "purple", "grey",
                 "black", "pink", "orange"]
@@ -504,9 +505,11 @@ if __name__ == "__main__":
     analysis.create_train_test_set(columns=[args.column])
     analysis.create_fingerprints(window_size=args.window_size,
             overlap=args.overlap)
-    analysis.build_model(n_clusters=args.n_clusters)
-    analysis.fit_predict()
-    joblib.dump(analysis.model, "model.pkl")
+    # analysis.build_model(n_clusters=int(args.n_clusters))
+    # analysis.fit_predict()
+    # joblib.dump(analysis.model, "model.pkl")
+    analysis.model = joblib.load("model.pkl")
+    analysis.predict()
     analysis.visualize_clusters()
     analysis.plot_labels_over_time()
     analysis.plot_cluster_center_distance()

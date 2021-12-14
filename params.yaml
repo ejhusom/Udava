@@ -1,11 +1,11 @@
 cluster:
   learning_method: minibatchkmeans
   max_iter: 100
-  n_clusters: '4'
+  n_clusters: 4
 evaluate: null
 featurize:
-  columns: OP_390_NC_SP_Torque
+  columns: OP390_NC_SP_Torque
   dataset: renault_sync
   overlap: 0
   timestamp_column: Timestamp
-  window_size: 10
+  window_size: 100

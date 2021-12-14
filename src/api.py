@@ -27,6 +27,7 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from udava import Udava
+from clustermodel import ClusterModel
 
 app = flask.Flask(__name__)
 api = Api(app)
@@ -96,8 +97,8 @@ class CreateModel(Resource):
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"]= flask.request.form["target"]
-            params["cluster"]["learning_method"]= flask.request.form["learning_method"]
-            params["cluster"]["n_clusters"]= flask.request.form["n_clusters"]
+            params["cluster"]["learning_method"] = flask.request.form["learning_method"]
+            params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             print(params)
 
         # Create dict containing all metadata about models
@@ -182,10 +183,12 @@ class Infer(Resource):
         model = models[model_id]
         params = model["params"]
 
-        vs = VirtualSensor(params_file=params)
+        cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
         subprocess.run(["dvc", "repro"])
+
+        cm.run_cluster_model(inference_df=inference_df)
 
         return flask.redirect("prediction")
 
@@ -193,6 +196,6 @@ class Infer(Resource):
 if __name__ == "__main__":
 
     api.add_resource(CreateModel, "/create_model")
-    api.add_resource(InferDemo, "/infer_demo")
+    # api.add_resource(InferDemo, "/infer_demo")
     api.add_resource(Infer, "/infer")
     app.run()

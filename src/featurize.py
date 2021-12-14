@@ -44,6 +44,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
     window_size = params["featurize"]["window_size"]
     overlap = params["featurize"]["overlap"]
     timestamp_column = params["featurize"]["timestamp_column"]
+    print(columns)
 
     # If no name of data set is given, all files present in 'assets/data/raw'
     # will be used.
@@ -51,15 +52,13 @@ def featurize(dir_path="", inference=False, inference_df=None):
         dir_path += "/" + dataset
 
     if inference:
-        df = _featurize(
+        featurized_df = _featurize(
             inference_df,
             columns,
             window_size,
             overlap,
             timestamp_column
         )
-
-
 
         return df
     else:
@@ -112,8 +111,12 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
     """Process individual DataFrames."""
 
     # If no features are specified, use all columns as features
-    if not isinstance(columns, list):
-        columns = df.columns
+    if type(columns) is str:
+        columns = [columns]
+    # if not isinstance(columns, list):
+    #     columns = df.columns
+
+    print(columns)
 
     # Check if wanted features from params.yaml exists in the data
     for column in columns:

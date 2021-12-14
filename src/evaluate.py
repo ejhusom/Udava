@@ -93,7 +93,11 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
     window_size = params["featurize"]["window_size"]
     overlap = params["featurize"]["overlap"]
-    columns = list(params["featurize"]["columns"])
+    columns = params["featurize"]["columns"]
+
+    print(columns)
+    if type(columns) is str:
+        columns = [columns]
 
     step = window_size - overlap
 
@@ -112,10 +116,6 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
             "black", "pink", "orange"]
 
     timestamps = original_data.index
-    print(timestamps)
-    print(type(timestamps))
-    print(columns)
-    print(n_features)
 
     for i in range(n_features):
         for j in range(n_labels):
@@ -205,7 +205,11 @@ if __name__ == '__main__':
     "fingerprint_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
+    print("=======")
+    print(fingerprints.shape)
+    print("=======")
+
     visualize_clusters(labels, fingerprints, model)
     plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
             original_data)
-    plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
+    # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
