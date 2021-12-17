@@ -106,4 +106,4 @@ class ClusterModel:
                 inference_df, model)
         plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
 
-        return labels
+        return fingerprint_timestamps, labels, sum_distance_to_centers

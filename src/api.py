@@ -88,7 +88,6 @@ class CreateModel(Resource):
 
     def post(self):
 
-
         try:
             # Read params file
             params_file = flask.request.files["file"]
@@ -165,7 +164,6 @@ class Infer(Resource):
 
     def post(self):
         
-
         # parser = reqparse.RequestParser()
 
         # parser.add_argument("inputVariables", required=True)
@@ -188,9 +186,23 @@ class Infer(Resource):
         # Run DVC to fetch correct assets.
         subprocess.run(["dvc", "repro"])
 
-        cm.run_cluster_model(inference_df=inference_df)
+        timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df)
+        timestamps = np.array(timestamps).reshape(-1,1)
+        labels = labels.reshape(-1,1)
+        distance_metric = distance_metric.reshape(-1,1)
+        output_data = np.concatenate([timestamps, labels, distance_metric],
+                axis=1)
+        output_data = output_data.tolist()
 
-        return flask.redirect("prediction")
+        output = {}
+        output["model_id"] = model_id
+        output["header"] = ["timestamp", "cluster", "metric"]
+        output["data"] = output_data
+        print(output)
+
+        # return flask.redirect("prediction")
+        return output
+        
 
 
 if __name__ == "__main__":
