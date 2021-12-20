@@ -66,7 +66,6 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
         dfs = []
         featurized_dfs = []
-        # timestamps = np.array([])
 
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
         DATA_FEATURIZED_PATH.mkdir(parents=True, exist_ok=True)

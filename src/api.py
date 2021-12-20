@@ -166,18 +166,31 @@ class Infer(Resource):
         
         # parser = reqparse.RequestParser()
 
-        # parser.add_argument("inputVariables", required=True)
-        # parser.add_argument("databaseToken", required=True)
-        # parser.add_argument("numberOfClusters", required=False, default=4)
-        # parser.add_argument("learningMethod", required=False, default="minibatchkmeans")
-        # parser.add_argument("window_size", required=False, default=100)
+        # parser.add_argument("model_id", required=True)
+        # parser.add_argument("header", required=True)
+        # parser.add_argument("data", required=True, action="append")
+        # args = parser.parse_args()
+        # model_id = int(args.model_id)
 
-        model_id = flask.request.form["id"]
-        csv_file = flask.request.files["file"]
-        inference_df = pd.read_csv(csv_file, index_col=0)
-        print("File is read.")
+        input_json = flask.request.get_json()
+        model_id = str(input_json["model_id"])
+
+        inference_df = pd.DataFrame(
+                input_json["data"],
+                columns=input_json["header"],
+        )
+        inference_df.set_index("timestamp", inplace=True)
+
+        print(inference_df)
+
+        # Reading csv file instead of JSON:
+        # model_id = flask.request.form["id"]
+        # csv_file = flask.request.files["file"]
+        # inference_df = pd.read_csv(csv_file, index_col=0)
+        # print("File is read.")
 
         models = get_models()
+        print(models)
         model = models[model_id]
         params = model["params"]
 
