@@ -89,7 +89,6 @@ class ClusterModel:
         fingerprint_timestamps = featurized_df.index
 
         fingerprints = featurized_df.to_numpy()
-        print(fingerprints)
         input_scaler = joblib.load(INPUT_SCALER_PATH)
         fingerprints = input_scaler.transform(fingerprints)
 

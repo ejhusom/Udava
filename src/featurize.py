@@ -44,7 +44,6 @@ def featurize(dir_path="", inference=False, inference_df=None):
     window_size = params["featurize"]["window_size"]
     overlap = params["featurize"]["overlap"]
     timestamp_column = params["featurize"]["timestamp_column"]
-    print(columns)
 
     # If no name of data set is given, all files present in 'assets/data/raw'
     # will be used.

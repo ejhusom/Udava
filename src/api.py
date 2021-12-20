@@ -174,7 +174,7 @@ class Infer(Resource):
 
         model_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
-        inference_df = pd.read_csv(csv_file)
+        inference_df = pd.read_csv(csv_file, index_col=0)
         print("File is read.")
 
         models = get_models()
@@ -198,7 +198,6 @@ class Infer(Resource):
         output["model_id"] = model_id
         output["header"] = ["timestamp", "cluster", "metric"]
         output["data"] = output_data
-        print(output)
 
         # return flask.redirect("prediction")
         return output
