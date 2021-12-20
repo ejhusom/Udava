@@ -87,3 +87,4 @@ assets/features/
 model_tuning/
 models/
 *.pkl
+src/templates/prediction.html
