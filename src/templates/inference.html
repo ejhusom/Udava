@@ -21,6 +21,11 @@
                 <input type="text" name="id">
                 <p>Upload data file here:</p>
                 <input type="file" name="file"/>
+                <p>Check this box to plot results:</p>
+                <input type="checkbox" name="plot" style="display:inline;" value=0>
+                <label for="plot" style="display:inline;">Plot results (can be slow for data sets > 100MB)</label>
+                <br>
+                <br>
                 <input type="submit" onclick="loading()"/>
             </form>
         </div>

@@ -95,7 +95,6 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
     overlap = params["featurize"]["overlap"]
     columns = params["featurize"]["columns"]
 
-    print(columns)
     if type(columns) is str:
         columns = [columns]
 
@@ -179,6 +178,7 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
     fig.update_yaxes(title_text="Input unit", secondary_y=True)
 
     fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
+    fig.write_html("src/templates/prediction.html")
 
 def plot_cluster_center_distance(fp_timestamps, fingerprints, model):
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     "fingerprint_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
-    visualize_clusters(labels, fingerprints, model)
+    # visualize_clusters(labels, fingerprints, model)
     plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
             original_data, model)
     # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)

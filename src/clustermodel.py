@@ -68,7 +68,7 @@ class ClusterModel:
 
         assert check_ok, "Assets missing."
 
-    def run_cluster_model(self, inference_df):
+    def run_cluster_model(self, inference_df, plot_results=False):
         """Run cluster model.
 
         Args:
@@ -100,9 +100,10 @@ class ClusterModel:
         # plt.plot(labels)
         # plt.show()
 
-        # visualize_clusters(labels, fingerprints, model)
-        # plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-        #         inference_df, model)
-        # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
+        if plot_results:
+            # visualize_clusters(labels, fingerprints, model)
+            plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
+                    inference_df, model)
+            # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
 
         return fingerprint_timestamps, labels, sum_distance_to_centers
