@@ -96,13 +96,13 @@ class ClusterModel:
         labels = model.predict(fingerprints)
         distance_to_centers, sum_distance_to_centers = calculate_distances(fingerprints, model)
 
-        plt.figure()
-        plt.plot(labels)
-        plt.show()
+        # plt.figure()
+        # plt.plot(labels)
+        # plt.show()
 
-        visualize_clusters(labels, fingerprints, model)
-        plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-                inference_df, model)
-        plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
+        # visualize_clusters(labels, fingerprints, model)
+        # plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
+        #         inference_df, model)
+        # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
 
         return fingerprint_timestamps, labels, sum_distance_to_centers

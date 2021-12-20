@@ -73,8 +73,16 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
         for filepath in filepaths:
 
-            # Read csv
+            # Read csv. Timestamp column assumed to be the first one.
             df = pd.read_csv(filepath, index_col=0)
+
+            # In case timestamps are dates, convert them to UNIX timestamps
+            try:
+                df.index = pd.to_datetime(df.index)
+                df.index = df.index.astype(np.int64) // 1e-9
+            except:
+                pass
+                
 
             # timestamps = np.concatenate([timestamps, df.index])
 
@@ -112,10 +120,6 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
     # If no features are specified, use all columns as features
     if type(columns) is str:
         columns = [columns]
-    # if not isinstance(columns, list):
-    #     columns = df.columns
-
-    print(columns)
 
     # Check if wanted features from params.yaml exists in the data
     for column in columns:

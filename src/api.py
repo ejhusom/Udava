@@ -112,7 +112,7 @@ class CreateModel(Resource):
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
         # Run DVC to create virtual sensor.
-        subprocess.run(["dvc", "repro"])
+        subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         # TODO: Compute metrics
         # metrics = json.load(open(METRICS_FILE_PATH))
@@ -158,46 +158,25 @@ class InferDemo(Resource):
 
         return flask.redirect("prediction")
 
-class Infer(Resource):
+class InferGUI(Resource):
     def get(self):
         return 200
 
     def post(self):
-        
-        # parser = reqparse.RequestParser()
 
-        # parser.add_argument("model_id", required=True)
-        # parser.add_argument("header", required=True)
-        # parser.add_argument("data", required=True, action="append")
-        # args = parser.parse_args()
-        # model_id = int(args.model_id)
-
-        input_json = flask.request.get_json()
-        model_id = str(input_json["model_id"])
-
-        inference_df = pd.DataFrame(
-                input_json["data"],
-                columns=input_json["header"],
-        )
-        inference_df.set_index("timestamp", inplace=True)
-
-        print(inference_df)
-
-        # Reading csv file instead of JSON:
-        # model_id = flask.request.form["id"]
-        # csv_file = flask.request.files["file"]
-        # inference_df = pd.read_csv(csv_file, index_col=0)
-        # print("File is read.")
+        model_id = flask.request.form["id"]
+        csv_file = flask.request.files["file"]
+        inference_df = pd.read_csv(csv_file, index_col=0)
+        print("File is read.")
 
         models = get_models()
-        print(models)
         model = models[model_id]
         params = model["params"]
 
         cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
-        subprocess.run(["dvc", "repro"])
+        subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df)
         timestamps = np.array(timestamps).reshape(-1,1)
@@ -212,7 +191,45 @@ class Infer(Resource):
         output["header"] = ["timestamp", "cluster", "metric"]
         output["data"] = output_data
 
-        # return flask.redirect("prediction")
+        return flask.redirect("prediction")
+
+class Infer(Resource):
+    def get(self):
+        return 200
+
+    def post(self):
+
+        input_json = flask.request.get_json()
+        model_id = str(input_json["model_id"])
+
+        inference_df = pd.DataFrame(
+                input_json["data"],
+                columns=input_json["header"],
+        )
+        inference_df.set_index("timestamp", inplace=True)
+
+        models = get_models()
+        model = models[model_id]
+        params = model["params"]
+
+        cm = ClusterModel(params_file=params)
+
+        # Run DVC to fetch correct assets.
+        subprocess.run(["dvc", "repro", "cluster"], check=True)
+
+        timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df)
+        timestamps = np.array(timestamps).reshape(-1,1)
+        labels = labels.reshape(-1,1)
+        distance_metric = distance_metric.reshape(-1,1)
+        output_data = np.concatenate([timestamps, labels, distance_metric],
+                axis=1)
+        output_data = output_data.tolist()
+
+        output = {}
+        output["model_id"] = model_id
+        output["header"] = ["timestamp", "cluster", "metric"]
+        output["data"] = output_data
+
         return output
         
 
@@ -221,5 +238,6 @@ if __name__ == "__main__":
 
     api.add_resource(CreateModel, "/create_model")
     # api.add_resource(InferDemo, "/infer_demo")
+    api.add_resource(InferGUI, "/infer_gui")
     api.add_resource(Infer, "/infer")
     app.run()

@@ -2,7 +2,7 @@ featurize:
     dataset: renault_sync
     window_size: 100
     overlap: 0
-    timestamp_column: Timestamp
+    timestamp_column: Date
     columns:
         - OP390_NC_SP_Torque
 
