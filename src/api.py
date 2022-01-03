@@ -206,13 +206,15 @@ class Infer(Resource):
     def post(self):
 
         input_json = flask.request.get_json()
-        model_id = str(input_json["model_id"])
+        print(input_json)
+        model_id = str(input_json["param"]["modeluid"])
+
 
         inference_df = pd.DataFrame(
-                input_json["data"],
-                columns=input_json["header"],
+                input_json["scalar"]["data"],
+                columns=input_json["scalar"]["headers"],
         )
-        inference_df.set_index("timestamp", inplace=True)
+        inference_df.set_index("date", inplace=True)
 
         models = get_models()
         model = models[model_id]
@@ -232,9 +234,9 @@ class Infer(Resource):
         output_data = output_data.tolist()
 
         output = {}
-        output["model_id"] = model_id
-        output["header"] = ["timestamp", "cluster", "metric"]
-        output["data"] = output_data
+        output["param"] = {"modeluid": model_id}
+        output["scalar"] = {"headers": ["date", "cluster", "metric"]}
+        output["scalar"] = {"data": output_data}
 
         return output
         

@@ -5,7 +5,7 @@ cluster:
 evaluate: null
 featurize:
   columns: OP390_NC_SP_Torque
-  dataset: renault_small
+  dataset: renault_sync
   overlap: 0
-  timestamp_column: Date
+  timestamp_column: Timestamp
   window_size: 100
