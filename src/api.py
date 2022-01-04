@@ -9,11 +9,12 @@ Created:
     2021-11-29 Monday 14:48:42 
 
 """
-import os
 import json
-import time
+import os
 import subprocess
+import time
 import urllib.request
+import uuid
 from pathlib import Path
 
 import flask
@@ -26,16 +27,18 @@ import yaml
 from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
-from udava import Udava
 from clustermodel import ClusterModel
+from udava import Udava
 
 app = flask.Flask(__name__)
 api = Api(app)
 app.config["DEBUG"] = True
 
+
 @app.route("/")
 def home():
     return flask.render_template("index.html")
+
 
 @app.route("/create_model_form")
 def create_model_form():
@@ -43,30 +46,28 @@ def create_model_form():
     models = get_models()
 
     return flask.render_template(
-            "create_model_form.html",
-            length=len(models),
-            models=models
+        "create_model_form.html", length=len(models), models=models
     )
+
 
 @app.route("/inference")
 def inference():
 
     models = get_models()
 
-    return flask.render_template(
-            "inference.html",
-            models=models
-    )
+    return flask.render_template("inference.html", models=models)
+
 
 @app.route("/result")
 def result(plot_div):
     # plot_div = session["plot_div"]
-    return flask.render_template("result.html",
-            plot=flask.Markup(plot_div))
+    return flask.render_template("result.html", plot=flask.Markup(plot_div))
+
 
 @app.route("/prediction")
 def prediction():
     return flask.render_template("prediction.html")
+
 
 def get_models():
 
@@ -76,6 +77,7 @@ def get_models():
         models = {}
 
     return models
+
 
 class CreateModel(Resource):
     def get(self):
@@ -95,7 +97,7 @@ class CreateModel(Resource):
         except:
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
-            params["featurize"]["columns"]= flask.request.form["target"]
+            params["featurize"]["columns"] = flask.request.form["target"]
             params["cluster"]["learning_method"] = flask.request.form["learning_method"]
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             print(params)
@@ -104,7 +106,7 @@ class CreateModel(Resource):
         model_metadata = {}
         # The ID of the virtual sensor is set to the current Unix time for
         # uniqueness.
-        model_id = int(time.time())
+        model_id = str(uuid.uuid4())
         model_metadata["id"] = model_id
         model_metadata["params"] = params
 
@@ -158,6 +160,7 @@ class InferDemo(Resource):
 
         return flask.redirect("prediction")
 
+
 class InferGUI(Resource):
     def get(self):
         return 200
@@ -179,23 +182,25 @@ class InferGUI(Resource):
         subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         if flask.request.form.get("plot"):
-            timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df, plot_results=True)
+            timestamps, labels, distance_metric = cm.run_cluster_model(
+                inference_df=inference_df, plot_results=True
+            )
             return flask.redirect("prediction")
         else:
-            timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df)
-            timestamps = np.array(timestamps).reshape(-1,1)
-            labels = labels.reshape(-1,1)
-            distance_metric = distance_metric.reshape(-1,1)
-            output_data = np.concatenate([timestamps, labels, distance_metric],
-                    axis=1)
+            timestamps, labels, distance_metric = cm.run_cluster_model(
+                inference_df=inference_df
+            )
+            timestamps = np.array(timestamps).reshape(-1, 1)
+            labels = labels.reshape(-1, 1)
+            distance_metric = distance_metric.reshape(-1, 1)
+            output_data = np.concatenate([timestamps, labels, distance_metric], axis=1)
             output_data = output_data.tolist()
 
             output = {}
-            output["model_id"] = model_id
-            output["header"] = ["timestamp", "cluster", "metric"]
-            output["data"] = output_data
-            # Run DVC to fetch correct assets.
-            subprocess.run(["dvc", "repro", "cluster"], check=True)
+            output["param"] = {"modeluid": model_id}
+            output["scalar"] = {"headers": ["date", "cluster", "metric"]}
+            output["scalar"] = {"data": output_data}
+
             return output
 
 
@@ -209,10 +214,9 @@ class Infer(Resource):
         print(input_json)
         model_id = str(input_json["param"]["modeluid"])
 
-
         inference_df = pd.DataFrame(
-                input_json["scalar"]["data"],
-                columns=input_json["scalar"]["headers"],
+            input_json["scalar"]["data"],
+            columns=input_json["scalar"]["headers"],
         )
         inference_df.set_index("date", inplace=True)
 
@@ -225,12 +229,13 @@ class Infer(Resource):
         # Run DVC to fetch correct assets.
         subprocess.run(["dvc", "repro", "cluster"], check=True)
 
-        timestamps, labels, distance_metric = cm.run_cluster_model(inference_df=inference_df)
-        timestamps = np.array(timestamps).reshape(-1,1)
-        labels = labels.reshape(-1,1)
-        distance_metric = distance_metric.reshape(-1,1)
-        output_data = np.concatenate([timestamps, labels, distance_metric],
-                axis=1)
+        timestamps, labels, distance_metric = cm.run_cluster_model(
+            inference_df=inference_df
+        )
+        timestamps = np.array(timestamps).reshape(-1, 1)
+        labels = labels.reshape(-1, 1)
+        distance_metric = distance_metric.reshape(-1, 1)
+        output_data = np.concatenate([timestamps, labels, distance_metric], axis=1)
         output_data = output_data.tolist()
 
         output = {}
@@ -239,7 +244,6 @@ class Infer(Resource):
         output["scalar"] = {"data": output_data}
 
         return output
-        
 
 
 if __name__ == "__main__":

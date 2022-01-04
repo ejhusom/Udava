@@ -4,8 +4,8 @@ cluster:
   n_clusters: 4
 evaluate: null
 featurize:
-  columns: OP390_NC_SP_Torque
-  dataset: renault_sync
+  columns: Spindle_Torque
+  dataset: automotive
   overlap: 0
-  timestamp_column: Timestamp
+  timestamp_column: Date
   window_size: 100
