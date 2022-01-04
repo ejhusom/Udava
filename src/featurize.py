@@ -142,7 +142,8 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
             window_size, overlap)
 
     df = pd.DataFrame(features,
-            index=fingerprint_timestamps[-len(features):])
+            index=fingerprint_timestamps)
+            # index=fingerprint_timestamps[-len(features):])
 
     # return features, fingerprint_timestamps
     return df
@@ -187,23 +188,24 @@ def _create_fingerprints(df, timestamps, window_size, overlap):
     ]
 
     # Initialize descriptive feature matrices
-    mean = np.zeros((n_rows - 1, n_features))
-    median = np.zeros((n_rows - 1, n_features))
-    std = np.zeros((n_rows - 1, n_features))
-    # rms = np.zeros((n_rows - 1, n_features))
-    var = np.zeros((n_rows - 1, n_features))
-    minmax = np.zeros((n_rows - 1, n_features))
-    frequency = np.zeros((n_rows - 1, n_features))
+    mean = np.zeros((n_rows, n_features))
+    median = np.zeros((n_rows, n_features))
+    std = np.zeros((n_rows, n_features))
+    # rms = np.zeros((n_rows, n_features))
+    var = np.zeros((n_rows, n_features))
+    minmax = np.zeros((n_rows, n_features))
+    frequency = np.zeros((n_rows, n_features))
+    fingerprint_timestamps = []
 
     # cfp = np.zeros((n_rows - 1, 22, n_features))
 
     # Loop through all observations and calculate features within window
-    for i in range(n_rows - 1):
+    for i in range(n_rows):
         start = i * step
         stop = start + window_size
 
         window = np.array(df.iloc[start:stop, :])
-        # fingerprint_timestamps[i] = timestamps[stop - (step // 2)]
+        fingerprint_timestamps.append(timestamps[stop - (step // 2)])
 
         mean[i, :] = np.mean(window, axis=0)
         median[i, :] = np.median(window, axis=0)
@@ -228,7 +230,9 @@ def _create_fingerprints(df, timestamps, window_size, overlap):
     # print(f"cfp shape: {cfp.shape}")
     # print(f"Features shape: {features.shape}")
 
-    fingerprint_timestamps = timestamps[::step]
+    # fingerprint_timestamps = timestamps[::step]
+    fingerprint_timestamps = pd.Index(fingerprint_timestamps, dtype=object,
+            name="Date")
 
     return features, fingerprint_timestamps
 
