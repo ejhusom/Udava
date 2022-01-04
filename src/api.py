@@ -198,8 +198,10 @@ class InferGUI(Resource):
 
             output = {}
             output["param"] = {"modeluid": model_id}
-            output["scalar"] = {"headers": ["date", "cluster", "metric"]}
-            output["scalar"] = {"data": output_data}
+            output["scalar"] = {
+                    "headers": ["date", "cluster", "metric"],
+                    "data": output_data
+            }
 
             return output
 
@@ -240,8 +242,10 @@ class Infer(Resource):
 
         output = {}
         output["param"] = {"modeluid": model_id}
-        output["scalar"] = {"headers": ["date", "cluster", "metric"]}
-        output["scalar"] = {"data": output_data}
+        output["scalar"] = {
+                "headers": ["date", "cluster", "metric"],
+                "data": output_data
+        }
 
         return output
 
