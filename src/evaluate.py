@@ -180,6 +180,7 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
     fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
     fig.write_html("src/templates/prediction.html")
+    fig.write_image("labels_over_time.pdf")
 
 def plot_cluster_center_distance(fp_timestamps, fingerprints, model):
 
