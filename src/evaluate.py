@@ -164,9 +164,10 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
     fig.add_trace(
             go.Scatter(
-                x=timestamps[::step],
+                # x=timestamps[::step],
+                x=fp_timestamps,
                 y=sum_dist,
-                name="Distance sum",
+                name="Validation metric",
             ),
             secondary_y=True,
     )

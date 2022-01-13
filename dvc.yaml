@@ -42,7 +42,7 @@ stages:
             - src/evaluate.py
             - src/config.py
         outs:
-            - assets/plots/clusters.png
+            # - assets/plots/clusters.png
             - assets/plots/labels_over_time.html
     #     metrics:
     #     - assets/metrics/metrics.json

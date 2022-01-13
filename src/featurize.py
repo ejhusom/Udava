@@ -76,10 +76,11 @@ def featurize(dir_path="", inference=False, inference_df=None):
             # Read csv. Timestamp column assumed to be the first one.
             df = pd.read_csv(filepath, index_col=0)
 
-            # In case timestamps are dates, convert them to UNIX timestamps
+            # Attempt to convert timestamps to datetime
             try:
                 df.index = pd.to_datetime(df.index)
-                df.index = df.index.astype(np.int64) // 1e-9
+                # Convert to UNIX time
+                # df.index = df.index.astype(np.int64) // 1e-9
             except:
                 pass
                 
