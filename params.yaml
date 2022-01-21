@@ -5,8 +5,8 @@ cluster:
 evaluate: null
 featurize:
   columns: Spindle_Torque
-  dataset: automotive_tiny
-  # dataset: automotive_pn41_early
+  # dataset: automotive_tiny
+  dataset: automotive_pn41_early
   overlap: 0
   timestamp_column: Date
   window_size: 100
