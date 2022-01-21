@@ -50,20 +50,26 @@ def visualize_clusters(labels, fingerprints, model, dim1=0, dim2=1, dim3=None,
 
     clusters = np.unique(labels)
 
+    colors = ["red", "green", "blue", "brown", "yellow", "purple", "grey",
+            "black", "pink", "orange"]
+
     if dim3 is None:
         plt.figure(figsize=(width, height))
 
-        for cluster in clusters:
-            current_cluster_indeces = np.where(labels == cluster)
+        for c in clusters:
+            current_cluster_indeces = np.where(labels == c)
             current_cluster_points = fingerprints[current_cluster_indeces]
-            plt.scatter(current_cluster_points[:, dim1], current_cluster_points[:, dim2])
+            plt.scatter(current_cluster_points[:, dim1],
+                    current_cluster_points[:, dim2], color=colors[c])
 
-        plt.scatter(
-            model.cluster_centers_[:, dim1], model.cluster_centers_[:, dim2],
-            s=70,
-            c="black",
-            edgecolors="white"
-        )
+            plt.scatter(
+                model.cluster_centers_[c, dim1], model.cluster_centers_[c, dim2],
+                s=90,
+                c=colors[c],
+                edgecolors="black",
+                marker="d"
+            )
+
         plt.show()
     else:
         fig = plt.figure(figsize=(10,10))
@@ -83,10 +89,11 @@ def visualize_clusters(labels, fingerprints, model, dim1=0, dim2=1, dim3=None,
         plt.show()
 
     PLOTS_PATH.mkdir(parents=True, exist_ok=True)
-    plt.savefig(PLOTS_PATH / "clusters.png")
+    plt.savefig(PLOTS_PATH / "clusters.png", dpi=300)
 
 def plot_labels_over_time(fp_timestamps, labels, fingerprints,
-        original_data, model):
+        original_data, model, filter_outliers=False,
+        show_local_distance=False):
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -100,15 +107,11 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
     step = window_size - overlap
 
+    if filter_outliers:
+        pass
+
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # fig.add_trace(
-    #     go.Scatter(x=fp_timestamps, y=labels,
-    #         name="Cluster labels"),
-    #     secondary_y=False,
-    # )
-
-    # n_features = fingerprints.shape[0]
     n_features = len(columns)
     n_labels = len(labels)
     colors = ["red", "green", "blue", "brown", "yellow", "purple", "grey",
@@ -121,53 +124,53 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
             start = j * step
             stop = start + window_size
-            # t = original_data.index.iloc[start:stop]
             t = timestamps[start:stop]
-
             cluster = labels[j]
 
             fig.add_trace(
                 go.Scatter(
                     x=t,
                     y=original_data[columns[i]].iloc[start:stop],
-                    # name=self.input_columns[i],
-                    # mode="markers"
                     line=dict(color=colors[cluster]),
                     showlegend=False,
                 ),
-                secondary_y=True,
             )
 
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=timestamps,
-        #         y=data[self.input_columns[i]],
-        #         name=self.input_columns[i],
-        #         # mode="markers"
-        #     ),
-        #     secondary_y=True,
-        # )
-        # if j > 100:
-        #     break
 
     dist = model.transform(fingerprints)
     sum_dist = dist.sum(axis=1)
 
-    # for i in range(dist.shape[1]):
-    #     fig.add_trace(
-    #             go.Scatter(
-    #                 x=timestamps[::self.step],
-    #                 y=dist[:,i],
-    #             ),
-    #             secondary_y=True,
-    #     )
+    if show_local_distance:
+        # label_indeces = labels.reshape(len(labels), 1)
+        # local_distance = np.take_along_axis(dist, label_indeces,
+        #         axis=1).flatten()
+        # fig.add_trace(
+        #         go.Scatter(
+        #             x=fp_timestamps,
+        #             y=local_distance
+        #         ),
+        #         secondary_y=True,
+        # )
+
+        # Plot distance to each cluster center
+        for i in range(dist.shape[1]):
+            fig.add_trace(
+                    go.Scatter(
+                        x=fp_timestamps,
+                        y=dist[:,i],
+                        line=dict(color=colors[i]),
+                        showlegend=False,
+                    ),
+                    secondary_y=True,
+            )
 
     fig.add_trace(
             go.Scatter(
                 # x=timestamps[::step],
                 x=fp_timestamps,
                 y=sum_dist,
-                name="Validation metric",
+                name="Deviation metric",
+                line=dict(color="black"),
             ),
             secondary_y=True,
     )
@@ -175,12 +178,12 @@ def plot_labels_over_time(fp_timestamps, labels, fingerprints,
 
     fig.update_layout(title_text="Cluster labels over time")
     fig.update_xaxes(title_text="date")
-    fig.update_yaxes(title_text="Cluster label number", secondary_y=False)
-    fig.update_yaxes(title_text="Input unit", secondary_y=True)
+    fig.update_yaxes(title_text="Deviation metric", secondary_y=True)
+    fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
     fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
     fig.write_html("src/templates/prediction.html")
-    # fig.write_image("labels_over_time.pdf")
+    # fig.write_image("labels_over_time.pdf", height=300, width=560)
 
 def plot_cluster_center_distance(fp_timestamps, fingerprints, model):
 
@@ -207,7 +210,7 @@ if __name__ == '__main__':
     "fingerprint_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
-    # visualize_clusters(labels, fingerprints, model)
+    visualize_clusters(labels, fingerprints, model)
     plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-            original_data, model)
+            original_data, model, filter_outliers=False, show_local_distance=True)
     # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
