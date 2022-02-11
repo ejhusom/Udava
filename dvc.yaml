@@ -26,6 +26,7 @@ stages:
         outs:
             - assets/output/labels.csv
             - assets/output/fingerprints.csv
+            - assets/output/cluster_names.csv
             - assets/models
         params:
             - cluster.learning_method
