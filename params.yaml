@@ -1,12 +1,11 @@
 cluster:
   learning_method: minibatchkmeans
   max_iter: 100
-  n_clusters: 4
+  n_clusters: 6
 evaluate: null
 featurize:
-  columns: Spindle_Torque
-  # dataset: automotive_tiny
-  dataset: automotive_pn41_early
+  columns: Channel_4_Data
+  dataset: nova10
   overlap: 0
   timestamp_column: Date
   window_size: 100

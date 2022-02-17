@@ -52,7 +52,6 @@ def cluster(dir_path=""):
     dump(model, MODELS_FILE_PATH)
 
     cluster_names = generate_cluster_names(model)
-    pd.DataFrame(cluster_names).to_csv(OUTPUT_PATH / "cluster_names.csv")
 
 
 def build_model(learning_method, n_clusters, max_iter):
@@ -114,7 +113,7 @@ def generate_cluster_names(model):
     cluster_names = []
 
     for i in range(num_clusters):
-        cluster_names.append(str(i))
+        cluster_names.append(str(i) + ": ")
 
     print(model.cluster_centers_)
 
@@ -122,13 +121,19 @@ def generate_cluster_names(model):
     mins = model.cluster_centers_.argmin(axis=0)
 
     for i in range(len(FEATURE_NAMES)):
-        cluster_names[maxs[i]] += "_highest_" + FEATURE_NAMES[i]
-        cluster_names[mins[i]] += "_lowest_" + FEATURE_NAMES[i]
+        # cluster_names[maxs[i]] += "_highest_" + FEATURE_NAMES[i]
+        # cluster_names[mins[i]] += "_lowest_" + FEATURE_NAMES[i]
+        cluster_names[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
+        cluster_names[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
 
     # if any(c == "" for c in cluster_names):
     #     for i in range(len(FEATURE_NAMES)):
     #         cluster_names[maxs[i]] += "highest_" + FEATURE_NAMES[i] + "_"
     #         cluster_names[mins[i]] += "lowest_" + FEATURE_NAMES[i] + "_"
+
+    cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
+
+    cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
     return cluster_names
 

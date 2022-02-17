@@ -120,6 +120,11 @@ class CreateModel(Resource):
         # metrics = json.load(open(METRICS_FILE_PATH))
         # model_metadata["metrics"] = metrics
 
+        # Read cluster characteristics
+        cluster_characteristics = pd.read_csv("assets/output/cluster_names.csv")
+        # Save cluster characteristics
+        model_metadata["cluster_characteristics"] = [c for c in cluster_characteristics.iloc[:,1]]
+
         try:
             models = json.load(open("models.json"))
         except:

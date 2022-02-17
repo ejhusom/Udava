@@ -8,16 +8,27 @@
                         <th>ID</td>
                         <th>Dataset name</th>
                         <th>Variable</th>
-                        <th>TODO: Compute metric</th>
+                        <th>Window size</th>
+                        <th>Number of clusters</th>
+                        <th>Cluster method</th>
+                        <!-- <th>TODO: Compute metric</th> -->
                         </tr>
                     </thead>
                     <tbody>
                         {%for model in models|reverse%}
-                        <tr>
+                        <tr onClick="toggleRow(this)">
                             <td>{{models[model]["id"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["dataset"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["columns"]}}</td>
-                            <td>NaN</td>
+                            <td>{{models[model]["params"]["featurize"]["window_size"]}}</td>
+                            <td>{{models[model]["params"]["cluster"]["n_clusters"]}}</td>
+                            <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
+                            <!-- <td>NaN</td> -->
+                            <td colspan=6>
+                                {%for cluster in models[model]["cluster_characteristics"]%}<br>
+                                    {{cluster}}
+                                {%endfor%}
+                            </td>
                         </tr>
                         {%endfor%}
                     </tbody>
@@ -25,3 +36,18 @@
             </div>
 
         </div>
+
+<script>
+$(function() {
+$("td[colspan=6]").find("p").hide();
+$("table").click(function(event) {
+event.stopPropagation();
+var $target = $(event.target);
+if ( $target.closest("td").attr("colspan") > 1 ) {
+$target.slideUp();
+} else {
+$target.closest("tr").next().find("p").slideToggle();
+}                    
+});
+});
+</script>
