@@ -24,11 +24,11 @@
                             <td>{{models[model]["params"]["cluster"]["n_clusters"]}}</td>
                             <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
                             <!-- <td>NaN</td> -->
-                            <td colspan=6>
+                            <td colspan=6><p>
                                 {%for cluster in models[model]["cluster_characteristics"]%}<br>
                                     {{cluster}}
                                 {%endfor%}
-                            </td>
+                            </p></td>
                         </tr>
                         {%endfor%}
                     </tbody>
