@@ -1,5 +1,5 @@
         <div class=box>
-            <h2>Overview over existing models</h2>
+            <h2>Model dashboard</h2>
 
             <div class=overviewTable>
                 <table>
@@ -16,19 +16,26 @@
                     </thead>
                     <tbody>
                         {%for model in models|reverse%}
-                        <tr onClick="toggleRow(this)">
+                        <tr>
                             <td>{{models[model]["id"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["dataset"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["columns"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["window_size"]}}</td>
-                            <td>{{models[model]["params"]["cluster"]["n_clusters"]}}</td>
-                            <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
-                            <!-- <td>NaN</td> -->
-                            <td colspan=6><p>
+                            <td class=tooltip>{{models[model]["params"]["cluster"]["n_clusters"]}}
+                                <span class=tooltiptext>
+                                    Cluster characteristics:<br>
                                 {%for cluster in models[model]["cluster_characteristics"]%}<br>
                                     {{cluster}}
                                 {%endfor%}
-                            </p></td>
+                                </span>
+                            </td>
+                            <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
+                            <!-- <td>NaN</td> -->
+                            <!-- <tr><td colspan="6"><p> -->
+                            <!--     {%for cluster in models[model]["cluster_characteristics"]%}<br> -->
+                            <!--         {{cluster}} -->
+                            <!--     {%endfor%} -->
+                            <!-- </p></td></tr> -->
                         </tr>
                         {%endfor%}
                     </tbody>
@@ -37,17 +44,26 @@
 
         </div>
 
-<script>
-$(function() {
-$("td[colspan=6]").find("p").hide();
-$("table").click(function(event) {
-event.stopPropagation();
-var $target = $(event.target);
-if ( $target.closest("td").attr("colspan") > 1 ) {
-$target.slideUp();
-} else {
-$target.closest("tr").next().find("p").slideToggle();
-}                    
-});
-});
-</script>
+<!-- <script> -->
+<!-- $(function() { -->
+      
+<!--     // Initially hide toggleable content -->
+<!--     $("td[colspan=6]").find("p").hide(); -->
+
+<!--     // Click handler on entire table -->
+<!--     $("tbody").click(function(event) { -->
+
+<!--         // No bubbling up -->
+<!--         event.stopPropagation(); -->
+
+<!--         var $target = $(event.target); -->
+
+<!--         // Open and close the appropriate thing -->
+<!--         if ( $target.closest("td").attr("colspan") > 1 ) { -->
+<!--             $target.slideUp(); -->
+<!--         } else { -->
+<!--             $target.closest("tr").next().find("p").slideToggle(); -->
+<!--         } -->                    
+<!--     }); -->
+<!-- }); -->
+<!-- </script> -->

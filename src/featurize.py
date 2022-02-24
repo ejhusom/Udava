@@ -128,9 +128,6 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
             print(f"Column {column} not found!")
 
     for col in df.columns:
-        # Remove feature from input. This is useful in the case that a raw
-        # feature is used to engineer a feature, but the raw feature itself
-        # should not be a part of the input.
         if col not in columns:
             del df[col]
 
@@ -138,7 +135,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
         elif not is_numeric_dtype(df[col]):
             del df[col]
 
-    features, fingerprint_timestamps = _create_fingerprints(df,
+    features, fingerprint_timestamps = create_fingerprints(df,
             df.index,
             window_size, overlap)
 
@@ -150,7 +147,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
     return df
 
 
-def _create_fingerprints(df, timestamps, window_size, overlap):
+def create_fingerprints(df, timestamps, window_size, overlap):
     """Create fingerprints of time series data.
 
     The fingerprint is based on statistical properties.

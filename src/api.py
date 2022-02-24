@@ -195,11 +195,10 @@ class InferGUI(Resource):
             timestamps, labels, distance_metric = cm.run_cluster_model(
                 inference_df=inference_df
             )
-            timestamps = np.array(timestamps).reshape(-1, 1)
+            timestamps = np.array(timestamps, dtype=np.int32).reshape(-1, 1)
             labels = labels.reshape(-1, 1)
             distance_metric = distance_metric.reshape(-1, 1)
             output_data = np.concatenate([timestamps, labels, distance_metric], axis=1)
-            output_data = output_data.tolist()
 
             output = {}
             output["param"] = {"modeluid": model_id}
