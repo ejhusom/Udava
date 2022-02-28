@@ -295,8 +295,8 @@ if __name__ == "__main__":
         fingerprints,
         original_data,
         model,
-        mark_outliers=False,
-        show_local_distance=True,
+        mark_outliers=True,
+        show_local_distance=False,
     )
 
     # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)

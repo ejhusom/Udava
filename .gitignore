@@ -11,6 +11,7 @@ build*
 *.npy
 # *.json
 models.json
+annotations.json
 
 # doconce:
 .*_html_file_collection

@@ -11,11 +11,14 @@ Created:
 """
 import sys
 
+import joblib
 import json
 import matplotlib.pyplot as plt
+# import plotext as plt
 import numpy as np
 import pandas as pd
 
+from config import *
 from featurize import *
 
 def read_annotations(filepath, verbose=False):
@@ -63,28 +66,46 @@ def create_cluster_centers_from_annotations(data, annotations):
     #     elif not is_numeric_dtype(data[col]):
     #         del data[col]
 
-    # categories = []
-    # for category in annotations["timeserieslabels"]:
-    #     categories.append(category)
-    # categories = np.unique(categories)
+    scaler = joblib.load(INPUT_SCALER_PATH)
+
     categories = np.unique(annotations["timeserieslabels"])
+    cluster_centers = {}
 
     for category in categories:
-    #     for j in range(len(annotations)):
-    #         if annotations["timeserieslabels"].iloc[j] == category:
-    #             print(category)
-    #             print(j)
 
         current_annotations = annotations[annotations["timeserieslabels"] == category]
 
+        features_list = []
+
         for start, end in zip(current_annotations["start"], current_annotations["end"]):
 
+            # Select the data covered by the current annotation.
             current_data = data.loc[start:end]
-            # print(current_data)
+
+            # plt.figure()
+            # plt.plot(current_data)
+            # plt.savefig("plot.png")
+            # plt.show()
+
+            # Featurize the current data.
             features, fingerprint_timestamps = create_fingerprints(current_data, current_data.index, window_size, overlap)
 
+            features_list.append(features)
+        
+        # Combine all the data that is annotated with the same category.
+        combined_feature_vectors = np.concatenate(features_list, axis=0)
 
-    print(annotations)
+        # Scale the feature vectors with the scaler already fitted on the full data
+        # set (not only the data used for annotations).
+        scaled_feature_vectors = scaler.transform(combined_feature_vectors)
+
+        # Take the average of the feature vectors, to find a representative
+        # feature vector for the current category.
+        average_feature_vector = np.average(scaled_feature_vectors, axis=0)
+        cluster_centers[category] = average_feature_vector
+
+    print(cluster_centers)
+    return cluster_centers
 
 
 if __name__ == '__main__': 

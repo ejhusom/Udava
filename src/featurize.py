@@ -74,7 +74,8 @@ def featurize(dir_path="", inference=False, inference_df=None):
         for filepath in filepaths:
 
             # Read csv. Timestamp column assumed to be the first one.
-            df = pd.read_csv(filepath, index_col=0)
+            df = pd.read_csv(filepath)#, index_col=0)
+            df = df.set_index(timestamp_column)
 
             # Attempt to convert timestamps to datetime
             try:
