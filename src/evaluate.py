@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import seaborn as sn
 import yaml
 from catch22 import catch22_all
 from mpl_toolkits import mplot3d
@@ -295,7 +294,7 @@ if __name__ == "__main__":
         fingerprints,
         original_data,
         model,
-        mark_outliers=True,
+        mark_outliers=False,
         show_local_distance=False,
     )
 
