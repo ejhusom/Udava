@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""API for Udava.
+"""REST API for Udava.
 
 Author:
     Erik Johannes Husom
@@ -60,7 +60,6 @@ def inference():
 
 @app.route("/result")
 def result(plot_div):
-    # plot_div = session["plot_div"]
     return flask.render_template("result.html", plot=flask.Markup(plot_div))
 
 
@@ -104,8 +103,7 @@ class CreateModel(Resource):
 
         # Create dict containing all metadata about models
         model_metadata = {}
-        # The ID of the virtual sensor is set to the current Unix time for
-        # uniqueness.
+        # The ID of the model is given an UUID.
         model_id = str(uuid.uuid4())
         model_metadata["id"] = model_id
         model_metadata["params"] = params
