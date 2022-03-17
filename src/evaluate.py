@@ -172,7 +172,9 @@ def plot_labels_over_time(
     model,
     mark_outliers=False,
     show_local_distance=False,
+    reduce_plot_size=False
 ):
+
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -200,18 +202,28 @@ def plot_labels_over_time(
 
     timestamps = original_data.index
 
+    if n_labels > 10000:
+        reduce_plot_size = True
+
     for i in range(n_features):
         for j in range(n_labels):
 
             start = j * step
             stop = start + window_size
             t = timestamps[start:stop]
+            y = original_data[columns[i]].iloc[start:stop],
+
             cluster = labels[j]
 
             if cluster == -1:
                 color = "grey"
             else:
                 color = colors[cluster]
+
+            if reduce_plot_size:
+                t = t[::3]
+                y = y[::3]
+                j += 100
 
             fig.add_trace(
                 go.Scatter(
@@ -222,7 +234,7 @@ def plot_labels_over_time(
                 ),
             )
 
-    if show_local_distance:
+    if show_local_distance and not reduce_plot_size:
         label_indeces = labels.reshape(len(labels), 1)
         local_distance = np.take_along_axis(dist, label_indeces, axis=1).flatten()
         fig.add_trace(
@@ -242,6 +254,7 @@ def plot_labels_over_time(
                 secondary_y=True,
             )
 
+    # Plot deviation metric
     fig.add_trace(
         go.Scatter(
             # x=timestamps[::step],
