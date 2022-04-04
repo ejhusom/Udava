@@ -182,7 +182,7 @@ class InferGUI(Resource):
         cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
-        # subprocess.run(["dvc", "repro", "cluster"], check=True)
+        subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         if flask.request.form.get("plot"):
             timestamps, labels, distance_metric = cm.run_cluster_model(

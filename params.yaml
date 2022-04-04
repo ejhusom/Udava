@@ -4,8 +4,19 @@ cluster:
   n_clusters: 4
 evaluate: null
 featurize:
-  columns: Spindle_Torque
-  dataset: automotive_tiny
+  dataset: profileB_combined
+  columns: Stem Force
+  #
+  # dataset: nova10_p2_medium_every_5th_row
+  # dataset: nova10_p2_reduced
+  # dataset: nova10_p2_medium
+  # columns: Channel_2_Data
+  #
+  # dataset: automotive_pn41_tiny_late
+  # dataset: automotive_tiny
+  # dataset: automotive_pn41_early
+  # columns: Spindle_Torque
   overlap: 0
-  timestamp_column: Date
-  window_size: 3
+  timestamp_column: Date/Time
+  # timestamp_column:
+  window_size: 10
