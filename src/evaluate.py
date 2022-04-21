@@ -10,6 +10,7 @@ Created:
 
 """
 
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -142,7 +143,6 @@ def visualize_clusters(
                 marker="d",
             )
 
-        plt.show()
     else:
         fig = plt.figure(figsize=(10, 10))
         ax = plt.axes(projection="3d")
@@ -158,10 +158,10 @@ def visualize_clusters(
             model.cluster_centers_[:, dim3],
             alpha=1.0,
         )
-        plt.show()
 
     PLOTS_PATH.mkdir(parents=True, exist_ok=True)
     plt.savefig(PLOTS_PATH / "clusters.png", dpi=300)
+    plt.show()
 
 
 def plot_labels_over_time(
@@ -205,13 +205,16 @@ def plot_labels_over_time(
     if n_labels > 10000:
         reduce_plot_size = True
 
+    j = 0
+
     for i in range(n_features):
-        for j in range(n_labels):
+        # for j in range(n_labels):
+        while j < n_labels:
 
             start = j * step
             stop = start + window_size
             t = timestamps[start:stop]
-            y = original_data[columns[i]].iloc[start:stop],
+            y = original_data[columns[i]].iloc[start:stop]
 
             cluster = labels[j]
 
@@ -221,9 +224,9 @@ def plot_labels_over_time(
                 color = colors[cluster]
 
             if reduce_plot_size:
-                t = t[::3]
-                y = y[::3]
-                j += 100
+                # t = t[::3]
+                # y = y[::3]
+                j += 99
 
             fig.add_trace(
                 go.Scatter(
@@ -233,6 +236,8 @@ def plot_labels_over_time(
                     showlegend=False,
                 ),
             )
+
+            j += 1
 
     if show_local_distance and not reduce_plot_size:
         label_indeces = labels.reshape(len(labels), 1)

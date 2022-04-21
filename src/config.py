@@ -46,6 +46,9 @@ DATA_FEATURIZED_PATH = DATA_PATH / "featurized"
 DATA_SCALED_PATH = DATA_PATH / "scaled"
 """Path to scaled data."""
 
+ANNOTATIONS_PATH = DATA_PATH / "annotations"
+"""Path to annotations and annotations data."""
+
 MODELS_PATH = ASSETS_PATH / "models"
 """Path to models."""
 
@@ -60,6 +63,9 @@ METRICS_FILE_PATH = METRICS_PATH / "metrics.json"
 
 OUTPUT_PATH = ASSETS_PATH / "output"
 """Path to all output related to the cluster model."""
+
+PREDEFINED_CENTROIDS_PATH = OUTPUT_PATH / "predefined_centroids.json"
+"""Path to file containing predefined centroids."""
 
 PREDICTIONS_PATH = ASSETS_PATH / "predictions"
 """Path to folder containing predictions file."""

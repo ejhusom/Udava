@@ -21,6 +21,7 @@ stages:
         cmd: python3 src/cluster.py assets/data/featurized/
         deps:
             - assets/data/featurized
+            - assets/data/annotations
             - src/cluster.py
             - src/config.py
         outs:
@@ -32,6 +33,9 @@ stages:
             - cluster.learning_method
             - cluster.max_iter
             - cluster.n_clusters
+            - cluster.use_predefined_centroids
+            - cluster.fix_predefined_centroids
+            - cluster.annotations_dir
 
     evaluate:
         cmd: python3 src/evaluate.py

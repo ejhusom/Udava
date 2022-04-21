@@ -102,7 +102,7 @@ def create_cluster_centers_from_annotations(data, annotations):
         # Take the average of the feature vectors, to find a representative
         # feature vector for the current category.
         average_feature_vector = np.average(scaled_feature_vectors, axis=0)
-        cluster_centers[category] = average_feature_vector
+        cluster_centers[category] = list(average_feature_vector)
 
     print(cluster_centers)
     return cluster_centers

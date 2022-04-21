@@ -2,21 +2,25 @@ cluster:
   learning_method: minibatchkmeans
   max_iter: 100
   n_clusters: 4
+  use_predefined_centroids: False
+  fix_predefined_centroids: False
+  annotations_dir: nova10
 evaluate: null
 featurize:
-  dataset: profileB_combined
-  columns: Stem Force
-  #
-  # dataset: nova10_p2_medium_every_5th_row
+  # dataset: profileB_combined
+  # columns: Stem Force
+  
+  dataset: nova10_p2_medium_every_5th_row
   # dataset: nova10_p2_reduced
   # dataset: nova10_p2_medium
-  # columns: Channel_2_Data
+  columns: Channel_4_Data
   #
   # dataset: automotive_pn41_tiny_late
   # dataset: automotive_tiny
   # dataset: automotive_pn41_early
   # columns: Spindle_Torque
   overlap: 0
-  timestamp_column: Date/Time
+  # timestamp_column: Date/Time
   # timestamp_column:
+  timestamp_column:
   window_size: 10

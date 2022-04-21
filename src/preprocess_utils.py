@@ -74,6 +74,9 @@ def find_files(dir_path, file_extension=[]):
 
     """
 
+    # Convert dir_path to string, in case a Path was passed.
+    dir_path = str(dir_path)
+
     filepaths = []
 
     if type(file_extension) is not list:

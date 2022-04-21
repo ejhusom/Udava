@@ -1,14 +1,18 @@
 featurize:
-    dataset: renault_sync
+    dataset: nova10_p2_reduced
     window_size: 100
     overlap: 0
     timestamp_column: Date
     columns:
-        - OP390_NC_SP_Torque
+        - Channel_2_Data
 
 cluster:
     learning_method: minibatchkmeans
     n_clusters: 4
     max_iter: 100
+    use_predefined_centroids: True
+    fix_predefined_centroids: True
+    annotations_dir: nova10
+
 
 evaluate:
