@@ -70,6 +70,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
         DATA_FEATURIZED_PATH.mkdir(parents=True, exist_ok=True)
         SCALER_PATH.mkdir(parents=True, exist_ok=True)
+        ANNOTATIONS_PATH.mkdir(parents=True, exist_ok=True)
 
         for filepath in filepaths:
 
