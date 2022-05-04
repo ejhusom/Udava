@@ -45,8 +45,13 @@ def create_model_form():
 
     models = get_models()
 
+    # params = flask.session.get("params", None)
+
     return flask.render_template(
-        "create_model_form.html", length=len(models), models=models
+        "create_model_form.html", 
+        length=len(models), 
+        models=models
+        # params=params
     )
 
 
@@ -100,6 +105,8 @@ class CreateModel(Resource):
             # Read params file
             params_file = flask.request.files["file"]
             params = yaml.safe_load(params_file)
+            # flask.session["params"] = params
+            # flask.redirect("create_model_form")
         except:
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
@@ -110,7 +117,6 @@ class CreateModel(Resource):
             params["cluster"]["learning_method"] = flask.request.form["learning_method"]
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
-            print(params)
 
         # Create dict containing all metadata about models
         model_metadata = {}

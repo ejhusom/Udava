@@ -13,6 +13,19 @@ Created:  2021-11-29 Monday 10:55:44
 
 from pathlib import Path
 
+COLORS = [
+    "red",
+    "green",
+    "blue",
+    "brown",
+    "yellow",
+    "purple",
+    "grey",
+    "black",
+    "pink",
+    "orange",
+]
+
 PARAMS_FILE_PATH = Path("./params.yaml")
 """Path to params file."""
 

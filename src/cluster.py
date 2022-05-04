@@ -88,7 +88,7 @@ def cluster(dir_path=""):
 
     if use_predefined_centroids:
         for i, key in enumerate(predefined_centroids_dict):
-            cluster_names["cluster_name"][i] = str(cluster_names["cluster_name"][i]) + str(key)
+            cluster_names["cluster_name"][i] = str(cluster_names["cluster_name"][i].split(":")[0]) + ": " + f" {key}, ".upper() + str(cluster_names["cluster_name"][i].split(":")[1])
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
@@ -246,7 +246,8 @@ def generate_cluster_names(model):
     cluster_names = []
 
     for i in range(num_clusters):
-        cluster_names.append(str(i) + ": ")
+        # cluster_names.append(str(i) + ": ")
+        cluster_names.append(f"{i} ({COLORS[i]}): ")
 
     print(model.cluster_centers_)
 

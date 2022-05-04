@@ -1,14 +1,16 @@
-cluster:
-  annotations_dir: nova10
-  fix_predefined_centroids: true
-  learning_method: minibatchkmeans
-  max_iter: 100
-  n_clusters: 6
-  use_predefined_centroids: true
-evaluate: null
 featurize:
-  columns: Channel_4_Data
-  dataset: nova10_p2_medium
-  overlap: 0
-  timestamp_column: ''
-  window_size: 20
+    dataset: nova10_p2_medium_every_5th_row
+    window_size: 500
+    overlap: 0
+    timestamp_column: 
+    columns: Channel_4_Data
+
+cluster:
+    learning_method: minibatchkmeans
+    n_clusters: 7
+    max_iter: 100
+    use_predefined_centroids: True
+    fix_predefined_centroids: False
+    annotations_dir: nova10v2
+
+evaluate:

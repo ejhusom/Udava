@@ -95,18 +95,6 @@ def visualize_clusters(
 
     clusters = np.unique(labels)
 
-    colors = [
-        "red",
-        "green",
-        "blue",
-        "brown",
-        "yellow",
-        "purple",
-        "grey",
-        "black",
-        "pink",
-        "orange",
-    ]
 
     if mark_outliers:
         dist = model.transform(fingerprints)
@@ -121,7 +109,7 @@ def visualize_clusters(
             plt.scatter(
                 current_cluster_points[:, dim1],
                 current_cluster_points[:, dim2],
-                color=colors[c],
+                color=COLORS[c],
             )
 
         if mark_outliers:
@@ -138,7 +126,7 @@ def visualize_clusters(
                 model.cluster_centers_[c, dim1],
                 model.cluster_centers_[c, dim2],
                 s=90,
-                c=colors[c],
+                c=COLORS[c],
                 edgecolors="black",
                 marker="d",
             )
@@ -198,7 +186,6 @@ def plot_labels_over_time(
 
     n_features = len(columns)
     n_labels = len(labels)
-    colors = ["red", "green", "blue", "brown", "yellow", "purple", "pink", "orange"]
 
     timestamps = original_data.index
 
@@ -221,7 +208,7 @@ def plot_labels_over_time(
             if cluster == -1:
                 color = "grey"
             else:
-                color = colors[cluster]
+                color = COLORS[cluster]
 
             if reduce_plot_size:
                 # t = t[::3]
@@ -253,7 +240,7 @@ def plot_labels_over_time(
                 go.Scatter(
                     x=fp_timestamps,
                     y=dist[:, i],
-                    line=dict(color=colors[i]),
+                    line=dict(color=COLORS[i]),
                     showlegend=False,
                 ),
                 secondary_y=True,
