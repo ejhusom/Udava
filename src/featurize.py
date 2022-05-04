@@ -45,6 +45,9 @@ def featurize(dir_path="", inference=False, inference_df=None):
     overlap = params["featurize"]["overlap"]
     timestamp_column = params["featurize"]["timestamp_column"]
 
+    if timestamp_column == "":
+        timestamp_column = "Unnamed: 0"
+
     # If no name of data set is given, all files present in 'assets/data/raw'
     # will be used.
     if dataset != None:

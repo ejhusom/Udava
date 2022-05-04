@@ -24,13 +24,21 @@
                 <input type="text" name="dataset"/>
                 <label for="target">Variable:</label>
                 <input type="text" name="target"/>
+                <label for="timestamp_column">Name of timestamp column:</label>
+                <input type="text" name="timestamp_column"/>
                 <label for="learning_method">Learning method:</label>
                 <select name="learning_method">
                     <option value="minibatchkmeans" selected>K-means (mini-batch)</option>
                     <option value="meanshift">Mean shift</option>
                 </select>
                 <label for="n_clusters">Number of clusters:</label>
-                <input type="text" name="n_clusters"/>
+                <input type="text" name="n_clusters" />
+                <label for="max_iter">Max iterations of clustering:</label>
+                <input type="text" name="max_iter" value=100 />
+                <label for="window_size">Window size:</label>
+                <input type="text" name="window_size" />
+                <label for="overlap">Overlap of windows:</label>
+                <input type="text" name="overlap" value=0 />
 
                 <input type="submit" onclick="loading()"/>
             </form>

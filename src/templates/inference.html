@@ -22,19 +22,44 @@
                 <input type="text" name="id">
                 <p>Upload data file here:</p>
                 <input type="file" name="file"/>
-                <p>Check this box to plot results:</p>
-                <input type="checkbox" name="plot" style="display:inline;" value=0>
-                <label for="plot" style="display:inline;">Plot results (can be slow for data sets > 100MB)</label>
+                <!-- <p>Check this box to plot results:</p> -->
+                <p>
+                    <input type="checkbox" name="plot" id=plot style="display:inline;" value=0 >
+                    <label for="plot" style="display:inline;">Plot results (can be slow for data sets > 100MB)</label>
+                </p>
+                <input type="checkbox" name="plot_in_new_window" id="plot_in_new_window" style="display:inline;" value=0 disabled="disabled">
+                <label for="plot_in_new_window" style="display:inline;">Show large plot in new window</label>
                 <br>
                 <br>
                 <input type="submit" onclick="loading()"/>
             </form>
+            <div id=loaderContainer>
+                <div id=loader></div>
+                <div id=loaderText>Running inference...</div>
+            </div>
         </div>
 
+        {% if show_prediction %}
+            {% include "prediction.html" %}
+        {% endif %}
 
         <footer>
         </footer>
     </body>
+    <script>
+        var plotter = document.getElementById('plot');
+            var newWindow = document.getElementById('plot_in_new_window');
+            plotter.onchange = function() {
+              newWindow.disabled = !this.checked;
+        };
+    </script>
+
+    <script>
+        function loading(){
+            document.getElementById("loader").style.display = "block";
+            document.getElementById("loaderText").style.display = "block";
+        }
+    </script>
 
 </html>
 

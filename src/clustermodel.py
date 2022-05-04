@@ -102,8 +102,9 @@ class ClusterModel:
 
         if plot_results:
             # visualize_clusters(labels, fingerprints, model)
-            plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
+            fig_div = plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
                     inference_df, model)
             # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
-
-        return fingerprint_timestamps, labels, sum_distance_to_centers
+            return fig_div
+        else:
+            return fingerprint_timestamps, labels, sum_distance_to_centers

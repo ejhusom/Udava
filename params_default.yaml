@@ -1,18 +1,17 @@
 featurize:
-    dataset: nova10_p2_reduced
+    dataset: data
     window_size: 100
     overlap: 0
     timestamp_column: Date
     columns:
-        - Channel_2_Data
+        - variable
 
 cluster:
     learning_method: minibatchkmeans
     n_clusters: 4
     max_iter: 100
-    use_predefined_centroids: True
-    fix_predefined_centroids: True
-    annotations_dir: nova10
-
+    use_predefined_centroids: False
+    fix_predefined_centroids: False
+    annotations_dir:
 
 evaluate:

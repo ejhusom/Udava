@@ -57,6 +57,13 @@ def inference():
 
     return flask.render_template("inference.html", models=models)
 
+@app.route("/inference_result")
+def inference_result():
+
+    models = get_models()
+
+    return flask.render_template("inference.html", models=models,
+            show_prediction=True)
 
 @app.route("/result")
 def result(plot_div):
@@ -97,8 +104,12 @@ class CreateModel(Resource):
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
+            params["featurize"]["overlap"] = int(flask.request.form["overlap"])
+            params["featurize"]["timestamp_column"] = flask.request.form["timestamp_column"]
+            params["featurize"]["window_size"] = int(flask.request.form["window_size"])
             params["cluster"]["learning_method"] = flask.request.form["learning_method"]
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
+            params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
             print(params)
 
         # Create dict containing all metadata about models
@@ -185,10 +196,14 @@ class InferGUI(Resource):
         subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         if flask.request.form.get("plot"):
-            timestamps, labels, distance_metric = cm.run_cluster_model(
+            fig_div = cm.run_cluster_model(
                 inference_df=inference_df, plot_results=True
             )
-            return flask.redirect("prediction")
+
+            if flask.request.form.get("plot_in_new_window"):
+                return flask.redirect("prediction")
+            else:
+                return flask.redirect("inference_result")
         else:
             timestamps, labels, distance_metric = cm.run_cluster_model(
                 inference_df=inference_df
