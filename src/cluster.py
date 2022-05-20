@@ -332,8 +332,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
     segments = find_segments(labels)
 
     segments_sorted_on_length = segments[segments[:, 2].argsort()]
-    print(segments_sorted_on_length)
-    print(segments)
 
     shortest_segment = np.min(segments[:,2])
     number_of_segments = len(segments)
@@ -341,8 +339,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
     # Filter out the segments which are too short
     # for i in range(len(segments)):
     while shortest_segment < min_segment_length:
-        print("==========")
-        print(shortest_segment)
         # Get the information of current segment
         current_segment = segments_sorted_on_length[0]
         segment_idx = current_segment[0]
@@ -350,9 +346,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         length = current_segment[2]
         start_idx = current_segment[3]
         end_idx = current_segment[4]
-
-        print(segment_idx)
-        print(f"Start idx: {start_idx}")
 
         # If the segment length is long enough, break the loop
         if length >= min_segment_length:
@@ -375,9 +368,13 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
 
         # Find the neighboring segment labels
         if segment_idx == 0:
+            # If it is the first segment, then the label of the previous
+            # segment will be set to equal the one for the next segment
             label_of_previous_segment = segments[segment_idx + 1][1]
             label_of_next_segment = segments[segment_idx + 1][1]
         elif segment_idx == len(segments) - 1:
+            # If it is the last segment, then the label of the next
+            # segment will be set to equal the one for the previous segment
             label_of_previous_segment = segments[segment_idx - 1][1]
             label_of_next_segment = segments[segment_idx - 1][1]
         else:
@@ -394,13 +391,10 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         elif most_frequent_second_closest_cluster_center == label_of_next_segment:
             current_new_labels[:] = label_of_next_segment
         else:
-            # current_new_labels[: length // 2] = label_of_previous_segment
-            # current_new_labels[length // 2 :] = label_of_next_segment
-            current_new_labels[:] = label_of_next_segment
+            current_new_labels[: length // 2] = label_of_previous_segment
+            current_new_labels[length // 2 :] = label_of_next_segment
+            # current_new_labels[:] = label_of_next_segment
 
-
-        print(f" Original labels: {labels[start_idx : end_idx + 1]}")
-        print(f"New labels: {current_new_labels}")
 
         # Update with new labels
         new_labels[start_idx : end_idx + 1] = current_new_labels
@@ -415,10 +409,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
             break
 
         number_of_segments = len(segments)
-
-    print(labels)
-    print(new_labels)
-    print(labels - new_labels)
 
     return new_labels
 
