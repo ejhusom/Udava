@@ -92,7 +92,7 @@ def create_cluster_centers_from_annotations(data, annotations):
             # plt.show()
 
             # Featurize the current data.
-            features, fingerprint_timestamps = create_fingerprints(
+            features, feature_vector_timestamps = create_feature_vectors(
                 current_data, current_data.index, window_size, overlap
             )
 

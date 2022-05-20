@@ -1,18 +1,21 @@
 featurize:
-    dataset: profileB_combined
-    # dataset: nova10_p2_medium_every_5th_row
-    window_size: 10
+    # dataset: profileB_combined
+    dataset: nova10_p2_medium_every_5th_row
+    window_size: 500
     overlap: 0
-    timestamp_column: Date/Time
-    columns: Stem Force
+    timestamp_column:
+    # timestamp_column: Date/Time
+    # columns: Stem Force
+    columns: Channel_4_Data
 
 cluster:
     learning_method: minibatchkmeans
-    n_clusters: 3
+    n_clusters: 7
     max_iter: 100
-    use_predefined_centroids: False
+    use_predefined_centroids: True
     fix_predefined_centroids: False
-    annotations_dir:
-    # annotations_dir: nova10v2
+    # annotations_dir:
+    annotations_dir: nova10v2
+    min_segment_length: 10
 
 evaluate:

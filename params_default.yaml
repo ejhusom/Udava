@@ -13,5 +13,6 @@ cluster:
     use_predefined_centroids: False
     fix_predefined_centroids: False
     annotations_dir:
+    min_segment_length: 10
 
 evaluate:

@@ -152,7 +152,7 @@ def visualize_clusters(
 
 
 def plot_labels_over_time(
-    fp_timestamps,
+    feature_vector_timestamps,
     labels,
     feature_vectors,
     original_data,
@@ -228,7 +228,7 @@ def plot_labels_over_time(
         label_indeces = labels.reshape(len(labels), 1)
         local_distance = np.take_along_axis(dist, label_indeces, axis=1).flatten()
         fig.add_trace(
-            go.Scatter(x=fp_timestamps, y=local_distance),
+            go.Scatter(x=feature_vector_timestamps, y=local_distance),
             secondary_y=True,
         )
 
@@ -236,7 +236,7 @@ def plot_labels_over_time(
         for i in range(dist.shape[1]):
             fig.add_trace(
                 go.Scatter(
-                    x=fp_timestamps,
+                    x=feature_vector_timestamps,
                     y=dist[:, i],
                     line=dict(color=COLORS[i]),
                     showlegend=False,
@@ -248,7 +248,7 @@ def plot_labels_over_time(
     fig.add_trace(
         go.Scatter(
             # x=timestamps[::step],
-            x=fp_timestamps,
+            x=feature_vector_timestamps,
             y=sum_dist,
             name="Deviation metric",
             line=dict(color="black"),
@@ -268,7 +268,7 @@ def plot_labels_over_time(
     return fig.to_html(full_html=False)
 
 
-def plot_cluster_center_distance(fp_timestamps, feature_vectors, model):
+def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
 
     dist = model.transform(feature_vectors)
     dist = dist.sum(axis=1)

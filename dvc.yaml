@@ -36,6 +36,7 @@ stages:
             - cluster.use_predefined_centroids
             - cluster.fix_predefined_centroids
             - cluster.annotations_dir
+            - cluster.min_segment_length
 
     evaluate:
         cmd: python3 src/evaluate.py

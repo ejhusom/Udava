@@ -41,6 +41,7 @@ def cluster(dir_path=""):
     use_predefined_centroids = params["cluster"]["use_predefined_centroids"]
     fix_predefined_centroids = params["cluster"]["fix_predefined_centroids"]
     annotations_dir = params["cluster"]["annotations_dir"]
+    min_segment_length = params["cluster"]["min_segment_length"]
 
     # Find data files and load feature_vectors.
     filepaths = find_files(dir_path, file_extension=".npy")
@@ -73,8 +74,6 @@ def cluster(dir_path=""):
             annotation_data, annotations
         )
 
-        print(predefined_centroids_dict)
-
         with open(PREDEFINED_CENTROIDS_PATH, "w") as f:
             json.dump(predefined_centroids_dict, f)
 
@@ -89,9 +88,15 @@ def cluster(dir_path=""):
     else:
         labels, model = fit_predict(feature_vectors, model)
 
-    distances_to_centers, sum_distance_to_centers = calculate_distances(
-        feature_vectors, model
-    )
+    if min_segment_length > 0:
+        distances_to_centers, sum_distance_to_centers = calculate_distances(
+            feature_vectors, model
+        )
+        # print(distances_to_centers)
+        # print(labels)
+        # print(distances_to_centers.shape)
+        # print(labels.shape)
+        labels = filter_segments(labels, distances_to_centers, min_segment_length)
 
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -275,8 +280,6 @@ def generate_cluster_names(model):
         # cluster_names.append(str(i) + ": ")
         cluster_names.append(f"{i} ({COLORS[i]}): ")
 
-    print(model.cluster_centers_)
-
     maxs = model.cluster_centers_.argmax(axis=0)
     mins = model.cluster_centers_.argmin(axis=0)
 
@@ -294,6 +297,130 @@ def generate_cluster_names(model):
     cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
 
     return cluster_names
+
+
+def find_segments(labels):
+
+    segments = []
+
+    current_label = labels[0]
+    current_length = 1
+    start_idx = 0
+    segment_idx = 0
+
+    # Count the length of each segment
+    for i in range(1, len(labels)):
+        if labels[i] == current_label:
+            current_length += 1
+        else:
+            end_idx = i - 1
+            segments.append(
+                [segment_idx, current_label, current_length, start_idx, end_idx]
+            )
+            segment_idx += 1
+            current_label = labels[i]
+            current_length = 1
+            start_idx = i
+
+    return np.array(segments)
+
+
+def filter_segments(labels, distances_to_centers, min_segment_length):
+
+    new_labels = labels.copy()
+
+    segments = find_segments(labels)
+
+    segments_sorted_on_length = segments[segments[:, 2].argsort()]
+    print(segments_sorted_on_length)
+    print(segments)
+
+    shortest_segment = np.min(segments[:,2])
+    number_of_segments = len(segments)
+
+    # Filter out the segments which are too short
+    # for i in range(len(segments)):
+    while shortest_segment < min_segment_length:
+        print("==========")
+        print(shortest_segment)
+        # Get the information of current segment
+        current_segment = segments_sorted_on_length[0]
+        segment_idx = current_segment[0]
+        label = current_segment[1]
+        length = current_segment[2]
+        start_idx = current_segment[3]
+        end_idx = current_segment[4]
+
+        print(segment_idx)
+        print(f"Start idx: {start_idx}")
+
+        # If the segment length is long enough, break the loop
+        if length >= min_segment_length:
+            break
+
+
+        current_distances = distances_to_centers[start_idx : end_idx + 1, :]
+
+        # Set the original minimum distance to be above the maximum, in order
+        # to find the second closest cluster center
+        current_distances[:, label] = np.max(current_distances) + 1
+
+        # Find the second closest cluster center of the current data points
+        second_closest_cluster_centers = current_distances.argmin(axis=1)
+
+        # Find the most frequent second closest cluster center in the segment
+        counts = np.bincount(second_closest_cluster_centers)
+        most_frequent_second_closest_cluster_center = np.argmax(counts)
+        current_new_labels = np.ones_like(second_closest_cluster_centers) * most_frequent_second_closest_cluster_center
+
+        # Find the neighboring segment labels
+        if segment_idx == 0:
+            label_of_previous_segment = segments[segment_idx + 1][1]
+            label_of_next_segment = segments[segment_idx + 1][1]
+        elif segment_idx == len(segments) - 1:
+            label_of_previous_segment = segments[segment_idx - 1][1]
+            label_of_next_segment = segments[segment_idx - 1][1]
+        else:
+            label_of_previous_segment = segments[segment_idx - 1][1]
+            label_of_next_segment = segments[segment_idx + 1][1]
+
+        # If the most frequent second closest cluster center in the segment is
+        # different the previous and next segment, the current segment will be
+        # split in half, and each half will be "swallowed" by the neighboring
+        # segments. Otherwise the label is set to either the previous or next
+        # segment label.
+        if most_frequent_second_closest_cluster_center == label_of_previous_segment:
+            current_new_labels[:] = label_of_previous_segment
+        elif most_frequent_second_closest_cluster_center == label_of_next_segment:
+            current_new_labels[:] = label_of_next_segment
+        else:
+            # current_new_labels[: length // 2] = label_of_previous_segment
+            # current_new_labels[length // 2 :] = label_of_next_segment
+            current_new_labels[:] = label_of_next_segment
+
+
+        print(f" Original labels: {labels[start_idx : end_idx + 1]}")
+        print(f"New labels: {current_new_labels}")
+
+        # Update with new labels
+        new_labels[start_idx : end_idx + 1] = current_new_labels
+
+        # Recompute segments, since they now have changed
+        segments = find_segments(new_labels)
+        segments_sorted_on_length = segments[segments[:, 2].argsort()]
+        shortest_segment = np.min(segments[:,2])
+
+        if len(segments) == number_of_segments:
+            print("Could not remove any more segments.")
+            break
+
+        number_of_segments = len(segments)
+
+    print(labels)
+    print(new_labels)
+    print(labels - new_labels)
+
+    return new_labels
 
 
 if __name__ == "__main__":
