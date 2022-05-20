@@ -10,10 +10,10 @@ Created:
 
 """
 import sys
-import yaml
 
 import numpy as np
 import pandas as pd
+import yaml
 from joblib import dump
 from sklearn.cluster import (
     DBSCAN,
@@ -29,6 +29,7 @@ from annotations import *
 from config import *
 from preprocess_utils import find_files, move_column
 
+
 def cluster(dir_path=""):
 
     with open("params.yaml", "r") as params_file:
@@ -41,46 +42,61 @@ def cluster(dir_path=""):
     fix_predefined_centroids = params["cluster"]["fix_predefined_centroids"]
     annotations_dir = params["cluster"]["annotations_dir"]
 
-    # Find data files and load fingerprints.
+    # Find data files and load feature_vectors.
     filepaths = find_files(dir_path, file_extension=".npy")
-    fingerprints = np.load(filepaths[0])
+    feature_vectors = np.load(filepaths[0])
 
     model = build_model(learning_method, n_clusters, max_iter)
 
     if use_predefined_centroids:
         try:
-            annotations_data_filepath = find_files(ANNOTATIONS_PATH / annotations_dir,
-                    file_extension=".csv")[0]
+            annotations_data_filepath = find_files(
+                ANNOTATIONS_PATH / annotations_dir, file_extension=".csv"
+            )[0]
         except:
-            raise FileNotFoundError("Annotation data not found. Cannot create predefined clusters without annotation data.")
+            raise FileNotFoundError(
+                "Annotation data not found. Cannot create predefined clusters without annotation data."
+            )
 
         try:
-            annotations_filepath = find_files(ANNOTATIONS_PATH / annotations_dir,
-                    file_extension=".json")[0]
+            annotations_filepath = find_files(
+                ANNOTATIONS_PATH / annotations_dir, file_extension=".json"
+            )[0]
         except:
-            raise FileNotFoundError("Annotations not found. Cannot create predefined clusters without annotations.")
+            raise FileNotFoundError(
+                "Annotations not found. Cannot create predefined clusters without annotations."
+            )
 
         annotation_data = pd.read_csv(annotations_data_filepath, index_col=0)
         annotations = read_annotations(annotations_filepath)
-        predefined_centroids_dict = create_cluster_centers_from_annotations(annotation_data, annotations)
+        predefined_centroids_dict = create_cluster_centers_from_annotations(
+            annotation_data, annotations
+        )
 
         print(predefined_centroids_dict)
 
         with open(PREDEFINED_CENTROIDS_PATH, "w") as f:
             json.dump(predefined_centroids_dict, f)
 
-        labels, model = fit_predict_with_predefined_centroids(fingerprints,
-                model, n_clusters, predefined_centroids_dict, fix_predefined_centroids,
-                max_iter=max_iter)
+        labels, model = fit_predict_with_predefined_centroids(
+            feature_vectors,
+            model,
+            n_clusters,
+            predefined_centroids_dict,
+            fix_predefined_centroids,
+            max_iter=max_iter,
+        )
     else:
-        labels, model = fit_predict(fingerprints, model)
+        labels, model = fit_predict(feature_vectors, model)
 
-    distances_to_centers, sum_distance_to_centers = calculate_distances(fingerprints, model)
+    distances_to_centers, sum_distance_to_centers = calculate_distances(
+        feature_vectors, model
+    )
 
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
-    pd.DataFrame(fingerprints).to_csv(OUTPUT_PATH / "fingerprints.csv")
+    pd.DataFrame(feature_vectors).to_csv(OUTPUT_PATH / "feature_vectors.csv")
 
     dump(model, MODELS_FILE_PATH)
 
@@ -88,10 +104,14 @@ def cluster(dir_path=""):
 
     if use_predefined_centroids:
         for i, key in enumerate(predefined_centroids_dict):
-            cluster_names["cluster_name"][i] = str(cluster_names["cluster_name"][i].split(":")[0]) + ": " + f" {key}, ".upper() + str(cluster_names["cluster_name"][i].split(":")[1])
+            cluster_names["cluster_name"][i] = (
+                str(cluster_names["cluster_name"][i].split(":")[0])
+                + ": "
+                + f" {key}, ".upper()
+                + str(cluster_names["cluster_name"][i].split(":")[1])
+            )
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
-
 
 
 def build_model(learning_method, n_clusters, max_iter):
@@ -106,7 +126,6 @@ def build_model(learning_method, n_clusters, max_iter):
 
     """
 
-
     if learning_method == "meanshift":
         model = MeanShift()
     elif learning_method == "minibatchkmeans":
@@ -120,16 +139,21 @@ def build_model(learning_method, n_clusters, max_iter):
     return model
 
 
+def fit_predict(feature_vectors, model):
 
-def fit_predict(fingerprints, model):
-
-    labels = model.fit_predict(fingerprints)
+    labels = model.fit_predict(feature_vectors)
 
     return labels, model
 
-def fit_predict_with_predefined_centroids(fingerprints, model, n_clusters,
-        predefined_centroids_dict, fix_predefined_centroids=False,
-        max_iter=100):
+
+def fit_predict_with_predefined_centroids(
+    feature_vectors,
+    model,
+    n_clusters,
+    predefined_centroids_dict,
+    fix_predefined_centroids=False,
+    max_iter=100,
+):
     """Fit a model with fixe cluster centroids.
 
     Args:
@@ -148,7 +172,7 @@ def fit_predict_with_predefined_centroids(fingerprints, model, n_clusters,
     for key in predefined_centroids_dict:
         predefined_centroids.append(predefined_centroids_dict[key])
 
-    predefined_centroids  = np.array(predefined_centroids)
+    predefined_centroids = np.array(predefined_centroids)
 
     # If the number of predefined clusters is greater than the parameter
     # n_clusters, the former will override the latter.
@@ -156,79 +180,81 @@ def fit_predict_with_predefined_centroids(fingerprints, model, n_clusters,
 
         if n_clusters != predefined_centroids.shape[0]:
             n_clusters = predefined_centroids.shape[0]
-            print(f"""Number of clusters changed from {n_clusters} to
+            print(
+                f"""Number of clusters changed from {n_clusters} to
             {predefined_centroids.shape[0]} in order to match the
-            number of predefined clusters.""")
+            number of predefined clusters."""
+            )
 
         # If the predefined centroids should be fixed, simply use the
         # predefined centroids as the model's cluster centers.
         if fix_predefined_centroids:
             model = MiniBatchKMeans(max_iter=1, n_clusters=n_clusters)
-            model.fit(fingerprints)
+            model.fit(feature_vectors)
             model.cluster_centers_ = predefined_centroids
-            labels = model.predict(fingerprints)
+            labels = model.predict(feature_vectors)
 
         else:
-            model = MiniBatchKMeans(max_iter=max_iter, n_clusters=n_clusters,
-                    init=predefined_centroids)
-            labels = model.fit_predict(fingerprints)
+            model = MiniBatchKMeans(
+                max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
+            )
+            labels = model.fit_predict(feature_vectors)
 
         return labels, model
-            
-            
+
     # If the number of predefined clusters is less than the parameter
     # n_clusters, we need some extra random centroids.
     elif predefined_centroids.shape[0] < n_clusters:
 
         # Run one iteration of clustering to obtain initial centroids.
-        model = MiniBatchKMeans(
-                max_iter=1,
-                n_clusters=n_clusters
-        )
-        model.fit(fingerprints)
+        model = MiniBatchKMeans(max_iter=1, n_clusters=n_clusters)
+        model.fit(feature_vectors)
         initial_centroids = model.cluster_centers_
 
         # Overwrite some of the initial centroids with the predefined ones.
-        initial_centroids[0:predefined_centroids.shape[0],:] = predefined_centroids
-
+        initial_centroids[0 : predefined_centroids.shape[0], :] = predefined_centroids
 
         if fix_predefined_centroids:
             current_centroids = initial_centroids
 
             for i in range(max_iter):
                 model = MiniBatchKMeans(
-                        max_iter=1,
-                        n_clusters=n_clusters,
-                        init=current_centroids
+                    max_iter=1, n_clusters=n_clusters, init=current_centroids
                 )
 
-                model.fit(fingerprints)
+                model.fit(feature_vectors)
                 current_centroids = model.cluster_centers_
 
                 # Overwrite some of the current centroids with the predefined ones.
-                current_centroids[0:predefined_centroids.shape[0],:] = predefined_centroids
+                current_centroids[
+                    0 : predefined_centroids.shape[0], :
+                ] = predefined_centroids
 
-            labels = model.predict(fingerprints)
+            labels = model.predict(feature_vectors)
 
         else:
-            model = MiniBatchKMeans(max_iter=max_iter, n_clusters=n_clusters,
-                    init=initial_centroids)
-            labels = model.fit_predict(fingerprints)
+            model = MiniBatchKMeans(
+                max_iter=max_iter, n_clusters=n_clusters, init=initial_centroids
+            )
+            labels = model.fit_predict(feature_vectors)
 
         return labels, model
 
 
-def predict(fingerprints, model):
+def predict(feature_vectors, model):
 
-    labels = model.predict(fingerprints)
+    labels = model.predict(feature_vectors)
 
     return labels
 
-def calculate_distances(fingerprints, model):
 
-    distances_to_centers = model.transform(fingerprints)
+def calculate_distances(feature_vectors, model):
+
+    distances_to_centers = model.transform(feature_vectors)
     sum_distance_to_centers = distances_to_centers.sum(axis=1)
+
     return distances_to_centers, sum_distance_to_centers
+
 
 def generate_cluster_names(model):
     """Generate cluster names based on the characteristics of each cluster.
@@ -270,6 +296,6 @@ def generate_cluster_names(model):
     return cluster_names
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     cluster(sys.argv[1])

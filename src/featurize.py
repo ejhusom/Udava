@@ -11,16 +11,17 @@ Date:
 import json
 import os
 import sys
-import joblib
 
+import joblib
 import numpy as np
 import pandas as pd
+import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-import yaml
 
 from config import *
 from preprocess_utils import find_files, move_column
+
 
 def featurize(dir_path="", inference=False, inference_df=None):
     """Create vectors of summary statistics based on sliding windows across
@@ -55,11 +56,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
     if inference:
         featurized_df = _featurize(
-            inference_df,
-            columns,
-            window_size,
-            overlap,
-            timestamp_column
+            inference_df, columns, window_size, overlap, timestamp_column
         )
 
         return featurized_df
@@ -92,13 +89,12 @@ def featurize(dir_path="", inference=False, inference_df=None):
                 # df.index = df.index.astype(np.int64) // 1e-9
             except:
                 pass
-                
 
             # timestamps = np.concatenate([timestamps, df.index])
 
-            featurized_df = _featurize(df, columns, window_size, overlap,
-                    timestamp_column)
-
+            featurized_df = _featurize(
+                df, columns, window_size, overlap, timestamp_column
+            )
 
             dfs.append(df)
             featurized_dfs.append(featurized_df)
@@ -109,12 +105,9 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
-        # Save the timestamps for each fingerprint, in order to use it for
+        # Save the timestamps for each feature_vector, in order to use it for
         # plotting later.
-        np.save(
-                OUTPUT_PATH / "fingerprint_timestamps.npy",
-                fp_timestamps
-        )
+        np.save(OUTPUT_PATH / "feature_vector_timestamps.npy", fp_timestamps)
 
         scaler = StandardScaler()
         scaled = scaler.fit_transform(combined_featurized_df.to_numpy())
@@ -144,37 +137,36 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
         elif not is_numeric_dtype(df[col]):
             del df[col]
 
-    features, fingerprint_timestamps = create_fingerprints(df,
-            df.index,
-            window_size, overlap)
+    features, feature_vector_timestamps = create_feature_vectors(
+        df, df.index, window_size, overlap
+    )
 
-    df = pd.DataFrame(features,
-            index=fingerprint_timestamps)
-            # index=fingerprint_timestamps[-len(features):])
+    df = pd.DataFrame(features, index=feature_vector_timestamps)
+    # index=feature_vector_timestamps[-len(features):])
 
-    # return features, fingerprint_timestamps
+    # return features, feature_vector_timestamps
     return df
 
 
-def create_fingerprints(df, timestamps, window_size, overlap):
-    """Create fingerprints of time series data.
+def create_feature_vectors(df, timestamps, window_size, overlap):
+    """Create feature_vectors of time series data.
 
-    The fingerprint is based on statistical properties.
+    The feature vector is based on statistical properties.
 
     Args:
-        df (DataFrame): The data frame to create fingerprints from.
+        df (DataFrame): The data frame to create feature_vectors from.
         timestamps (Series): The timestamps corresponding to the time series in
             df.
         window_size (int): Number of time steps to include when calculating
-            a fingerprint.
+            a feature_vector.
         overlap (int): How much overlap between windows of the time series
             data.
 
     Returns:
-        fingerprints (Numpy array): An array of fingerprints for the time
+        feature_vectors (Numpy array): An array of feature_vectors for the time
             series data. The array has size n*m, where n is the number of
-            fingerprints (number of subsequences), and m is the number of
-            features in the fingerprint.
+            feature_vectors (number of subsequences), and m is the number of
+            features in the feature vector.
 
     """
 
@@ -185,13 +177,13 @@ def create_fingerprints(df, timestamps, window_size, overlap):
     step = window_size - overlap
 
     feature_names = [
-            "mean",
-            "median",
-            "std",
-            # "rms",
-            "var",
-            "minmax",
-            "frequency"
+        "mean",
+        "median",
+        "std",
+        # "rms",
+        "var",
+        "minmax",
+        "frequency",
     ]
 
     # Initialize descriptive feature matrices
@@ -202,7 +194,7 @@ def create_fingerprints(df, timestamps, window_size, overlap):
     var = np.zeros((n_rows, n_features))
     minmax = np.zeros((n_rows, n_features))
     frequency = np.zeros((n_rows, n_features))
-    fingerprint_timestamps = []
+    feature_vector_timestamps = []
 
     # cfp = np.zeros((n_rows - 1, 22, n_features))
 
@@ -212,7 +204,7 @@ def create_fingerprints(df, timestamps, window_size, overlap):
         stop = start + window_size
 
         window = np.array(df.iloc[start:stop, :])
-        fingerprint_timestamps.append(timestamps[stop - (step // 2)])
+        feature_vector_timestamps.append(timestamps[stop - (step // 2)])
 
         mean[i, :] = np.mean(window, axis=0)
         median[i, :] = np.median(window, axis=0)
@@ -225,23 +217,20 @@ def create_fingerprints(df, timestamps, window_size, overlap):
         # for j in range(n_features):
         #     cfp[i, :, j] = catch22_all(window)["values"]
 
-    features = np.concatenate(
-        (mean, median, std, var, minmax, frequency),
-        axis=1
-    )
+    features = np.concatenate((mean, median, std, var, minmax, frequency), axis=1)
     # cfp = np.nan_to_num(cfp)
 
     # features = cfp.reshape(n_rows - 1, 22*n_features)
-    
+
     # print(f"Mean shape: {mean.shape}")
     # print(f"cfp shape: {cfp.shape}")
     # print(f"Features shape: {features.shape}")
 
-    # fingerprint_timestamps = timestamps[::step]
-    fingerprint_timestamps = pd.Index(fingerprint_timestamps, dtype=object,
-            name="Date")
+    # feature_vector_timestamps = timestamps[::step]
+    feature_vector_timestamps = pd.Index(feature_vector_timestamps, dtype=object, name="Date")
 
-    return features, fingerprint_timestamps
+    return features, feature_vector_timestamps
+
 
 if __name__ == "__main__":
 

@@ -8,7 +8,7 @@ stages:
             - src/config.py
         outs:
             - assets/data/featurized
-            - assets/output/fingerprint_timestamps.npy
+            - assets/output/feature_vector_timestamps.npy
             - assets/output/combined.csv
         params:
             - featurize.columns
@@ -26,7 +26,7 @@ stages:
             - src/config.py
         outs:
             - assets/output/labels.csv
-            - assets/output/fingerprints.csv
+            - assets/output/feature_vectors.csv
             - assets/output/cluster_names.csv
             - assets/models
         params:
@@ -43,7 +43,7 @@ stages:
             - assets/data/featurized
             - assets/models/model.pkl
             - assets/output/labels.csv
-            - assets/output/fingerprint_timestamps.npy
+            - assets/output/feature_vector_timestamps.npy
             - assets/output/combined.csv
             - src/evaluate.py
             - src/config.py

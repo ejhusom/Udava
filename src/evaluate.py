@@ -73,7 +73,7 @@ def filter_outliers(labels, distances, percentile=95, separate_thresholds=False)
 
 def visualize_clusters(
     labels,
-    fingerprints,
+    feature_vectors,
     model,
     dim1=0,
     dim2=1,
@@ -95,9 +95,8 @@ def visualize_clusters(
 
     clusters = np.unique(labels)
 
-
     if mark_outliers:
-        dist = model.transform(fingerprints)
+        dist = model.transform(feature_vectors)
         labels = filter_outliers(labels, dist)
 
     if dim3 is None:
@@ -105,7 +104,7 @@ def visualize_clusters(
 
         for c in clusters:
             current_cluster_indeces = np.where(labels == c)
-            current_cluster_points = fingerprints[current_cluster_indeces]
+            current_cluster_points = feature_vectors[current_cluster_indeces]
             plt.scatter(
                 current_cluster_points[:, dim1],
                 current_cluster_points[:, dim2],
@@ -114,7 +113,7 @@ def visualize_clusters(
 
         if mark_outliers:
             current_cluster_indeces = np.where(labels == -1)
-            current_cluster_points = fingerprints[current_cluster_indeces]
+            current_cluster_points = feature_vectors[current_cluster_indeces]
             plt.scatter(
                 current_cluster_points[:, dim1],
                 current_cluster_points[:, dim2],
@@ -135,9 +134,9 @@ def visualize_clusters(
         fig = plt.figure(figsize=(10, 10))
         ax = plt.axes(projection="3d")
         ax.scatter(
-            fingerprints[:, dim1],
-            fingerprints[:, dim2],
-            fingerprints[:, dim3],
+            feature_vectors[:, dim1],
+            feature_vectors[:, dim2],
+            feature_vectors[:, dim3],
             alpha=0.1,
         )
         ax.scatter(
@@ -155,14 +154,13 @@ def visualize_clusters(
 def plot_labels_over_time(
     fp_timestamps,
     labels,
-    fingerprints,
+    feature_vectors,
     original_data,
     model,
     mark_outliers=False,
     show_local_distance=False,
-    reduce_plot_size=False
+    reduce_plot_size=False,
 ):
-
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -176,7 +174,7 @@ def plot_labels_over_time(
 
     step = window_size - overlap
 
-    dist = model.transform(fingerprints)
+    dist = model.transform(feature_vectors)
     sum_dist = dist.sum(axis=1)
 
     if mark_outliers:
@@ -270,9 +268,9 @@ def plot_labels_over_time(
     return fig.to_html(full_html=False)
 
 
-def plot_cluster_center_distance(fp_timestamps, fingerprints, model):
+def plot_cluster_center_distance(fp_timestamps, feature_vectors, model):
 
-    dist = model.transform(fingerprints)
+    dist = model.transform(feature_vectors)
     dist = dist.sum(axis=1)
     avg_dist = pd.Series(dist).rolling(50).mean()
 
@@ -290,19 +288,19 @@ if __name__ == "__main__":
 
     labels = pd.read_csv(OUTPUT_PATH / "labels.csv").iloc[:, -1].to_numpy()
     original_data = pd.read_csv(OUTPUT_PATH / "combined.csv", index_col=0)
-    fingerprints = np.load(DATA_FEATURIZED_PATH / "featurized.npy")
-    fingerprint_timestamps = np.load(OUTPUT_PATH / "fingerprint_timestamps.npy")
+    feature_vectors = np.load(DATA_FEATURIZED_PATH / "featurized.npy")
+    feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
-    visualize_clusters(labels, fingerprints, model, dim1=0, dim2=4, mark_outliers=False)
+    visualize_clusters(labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False)
     plot_labels_over_time(
-        fingerprint_timestamps,
+        feature_vector_timestamps,
         labels,
-        fingerprints,
+        feature_vectors,
         original_data,
         model,
         mark_outliers=False,
         show_local_distance=False,
     )
 
-    # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
+    # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)

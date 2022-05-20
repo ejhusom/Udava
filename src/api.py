@@ -48,8 +48,8 @@ def create_model_form():
     # params = flask.session.get("params", None)
 
     return flask.render_template(
-        "create_model_form.html", 
-        length=len(models), 
+        "create_model_form.html",
+        length=len(models),
         models=models
         # params=params
     )
@@ -62,13 +62,14 @@ def inference():
 
     return flask.render_template("inference.html", models=models)
 
+
 @app.route("/inference_result")
 def inference_result():
 
     models = get_models()
 
-    return flask.render_template("inference.html", models=models,
-            show_prediction=True)
+    return flask.render_template("inference.html", models=models, show_prediction=True)
+
 
 @app.route("/result")
 def result(plot_div):
@@ -112,7 +113,9 @@ class CreateModel(Resource):
             params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
             params["featurize"]["overlap"] = int(flask.request.form["overlap"])
-            params["featurize"]["timestamp_column"] = flask.request.form["timestamp_column"]
+            params["featurize"]["timestamp_column"] = flask.request.form[
+                "timestamp_column"
+            ]
             params["featurize"]["window_size"] = int(flask.request.form["window_size"])
             params["cluster"]["learning_method"] = flask.request.form["learning_method"]
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
@@ -138,7 +141,9 @@ class CreateModel(Resource):
         # Read cluster characteristics
         cluster_characteristics = pd.read_csv("assets/output/cluster_names.csv")
         # Save cluster characteristics
-        model_metadata["cluster_characteristics"] = [c for c in cluster_characteristics.iloc[:,1]]
+        model_metadata["cluster_characteristics"] = [
+            c for c in cluster_characteristics.iloc[:, 1]
+        ]
 
         try:
             models = json.load(open("models.json"))
@@ -202,9 +207,7 @@ class InferGUI(Resource):
         subprocess.run(["dvc", "repro", "cluster"], check=True)
 
         if flask.request.form.get("plot"):
-            fig_div = cm.run_cluster_model(
-                inference_df=inference_df, plot_results=True
-            )
+            fig_div = cm.run_cluster_model(inference_df=inference_df, plot_results=True)
 
             if flask.request.form.get("plot_in_new_window"):
                 return flask.redirect("prediction")
@@ -222,8 +225,8 @@ class InferGUI(Resource):
             output = {}
             output["param"] = {"modeluid": model_id}
             output["scalar"] = {
-                    "headers": ["date", "cluster", "metric"],
-                    "data": output_data
+                "headers": ["date", "cluster", "metric"],
+                "data": output_data,
             }
 
             return output
@@ -266,8 +269,8 @@ class Infer(Resource):
         output = {}
         output["param"] = {"modeluid": model_id}
         output["scalar"] = {
-                "headers": ["date", "cluster", "metric"],
-                "data": output_data
+            "headers": ["date", "cluster", "metric"],
+            "data": output_data,
         }
 
         return output

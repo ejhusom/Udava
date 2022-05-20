@@ -98,11 +98,4 @@ INPUT_SCALER_PATH = SCALER_PATH / "input_scaler.z"
 OUTPUT_SCALER_PATH = SCALER_PATH / "output_scaler.z"
 """Path to output scaler."""
 
-FEATURE_NAMES = [
-        "mean",
-        "median",
-        "std",
-        "var",
-        "minmax",
-        "frequency"
-]
+FEATURE_NAMES = ["mean", "median", "std", "var", "minmax", "frequency"]

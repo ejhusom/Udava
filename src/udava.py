@@ -10,13 +10,15 @@ Created:
 
 """
 import argparse
+
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
-import joblib
 import pandas as pd
 import plotly.graph_objects as go
 import seaborn as sn
 from catch22 import catch22_all
+from mpl_toolkits import mplot3d
 from plotly.subplots import make_subplots
 from sklearn.cluster import (
     DBSCAN,
@@ -27,7 +29,6 @@ from sklearn.cluster import (
     MeanShift,
     MiniBatchKMeans,
 )
-from mpl_toolkits import mplot3d
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -35,8 +36,8 @@ from config import *
 
 # pd.options.plotting.backend = "plotly"
 
-class Udava:
 
+class Udava:
     def __init__(
         self,
         df,
@@ -44,7 +45,7 @@ class Udava:
         train_stop_idx=None,
         test_start_idx=None,
         test_stop_idx=None,
-        timestamp_column_name="Timestamp"
+        timestamp_column_name="Timestamp",
     ):
 
         self.df = df
@@ -53,17 +54,25 @@ class Udava:
 
         self.train_start_idx = 0 if train_start_idx is None else train_start_idx
         self.train_stop_idx = (
-            self.df.shape[0]-1 if train_stop_idx is None else train_stop_idx
+            self.df.shape[0] - 1 if train_stop_idx is None else train_stop_idx
         )
         self.test_start_idx = 0 if test_start_idx is None else test_start_idx
         self.test_stop_idx = (
-            self.df.shape[0]-1 if test_stop_idx is None else test_stop_idx
+            self.df.shape[0] - 1 if test_stop_idx is None else test_stop_idx
         )
 
-        self.train_start_date = self.df[self.timestamp_column_name].iloc[self.train_start_idx]
-        self.train_stop_date = self.df[self.timestamp_column_name].iloc[self.train_stop_idx]
-        self.test_start_date = self.df[self.timestamp_column_name].iloc[self.test_start_idx]
-        self.test_stop_date = self.df[self.timestamp_column_name].iloc[self.test_stop_idx]
+        self.train_start_date = self.df[self.timestamp_column_name].iloc[
+            self.train_start_idx
+        ]
+        self.train_stop_date = self.df[self.timestamp_column_name].iloc[
+            self.train_stop_idx
+        ]
+        self.test_start_date = self.df[self.timestamp_column_name].iloc[
+            self.test_start_idx
+        ]
+        self.test_stop_date = self.df[self.timestamp_column_name].iloc[
+            self.test_stop_idx
+        ]
 
         self.model = None
 
@@ -175,14 +184,11 @@ class Udava:
             # for j in range(n_features):
             #     cfp[i, :, j] = catch22_all(window)["values"]
 
-        features = np.concatenate(
-            (mean, median, std, var, minmax, frequency),
-            axis=1
-        )
+        features = np.concatenate((mean, median, std, var, minmax, frequency), axis=1)
         # cfp = np.nan_to_num(cfp)
 
         # features = cfp.reshape(n_rows - 1, 22*n_features)
-        
+
         # print(f"Mean shape: {mean.shape}")
         # print(f"cfp shape: {cfp.shape}")
         # print(f"Features shape: {features.shape}")
@@ -273,35 +279,40 @@ class Udava:
 
             for cluster in self.clusters:
                 current_cluster_indeces = np.where(self.train_labels == cluster)
-                current_cluster_points = self.train_fingerprints[current_cluster_indeces]
+                current_cluster_points = self.train_fingerprints[
+                    current_cluster_indeces
+                ]
 
                 print(current_cluster_points.shape)
                 print(current_cluster_points)
-                plt.scatter(current_cluster_points[:, dim1], current_cluster_points[:, dim2])
+                plt.scatter(
+                    current_cluster_points[:, dim1], current_cluster_points[:, dim2]
+                )
 
             # plt.scatter(self.train_fingerprints[:, dim1], self.train_fingerprints[:, dim2])
 
             plt.scatter(
-                self.model.cluster_centers_[:, dim1], self.model.cluster_centers_[:, dim2],
+                self.model.cluster_centers_[:, dim1],
+                self.model.cluster_centers_[:, dim2],
                 s=70,
                 c="black",
-                edgecolors="white"
+                edgecolors="white",
             )
             # plt.show()
         else:
-            fig = plt.figure(figsize=(10,10))
-            ax = plt.axes(projection ='3d')
+            fig = plt.figure(figsize=(10, 10))
+            ax = plt.axes(projection="3d")
             ax.scatter(
-                    self.train_fingerprints[:, dim1], 
-                    self.train_fingerprints[:, dim2], 
-                    self.train_fingerprints[:, dim3],
-                    alpha=0.1
+                self.train_fingerprints[:, dim1],
+                self.train_fingerprints[:, dim2],
+                self.train_fingerprints[:, dim3],
+                alpha=0.1,
             )
             ax.scatter(
-                self.model.cluster_centers_[:, dim1], 
+                self.model.cluster_centers_[:, dim1],
                 self.model.cluster_centers_[:, dim2],
                 self.model.cluster_centers_[:, dim3],
-                alpha=1.0
+                alpha=1.0,
             )
 
             plt.savefig("visualize_clusters.png")
@@ -337,8 +348,18 @@ class Udava:
         n_features = len(self.input_columns)
         print(labels.shape)
         n_labels = len(labels)
-        colors = ["red", "green", "blue", "brown", "yellow", "purple", "grey",
-                "black", "pink", "orange"]
+        colors = [
+            "red",
+            "green",
+            "blue",
+            "brown",
+            "yellow",
+            "purple",
+            "grey",
+            "black",
+            "pink",
+            "orange",
+        ]
 
         for i in range(n_features):
             for j in range(n_labels):
@@ -386,12 +407,12 @@ class Udava:
         #     )
 
         fig.add_trace(
-                go.Scatter(
-                    x=timestamps[::self.step],
-                    y=dist.sum(axis=1),
-                    name="Distance sum",
-                ),
-                secondary_y=True,
+            go.Scatter(
+                x=timestamps[:: self.step],
+                y=dist.sum(axis=1),
+                name="Distance sum",
+            ),
+            secondary_y=True,
         )
         # fig.add_trace(
         #         go.Scatter(
@@ -411,7 +432,7 @@ class Udava:
         # )
 
         # pn = np.array(pd.DataFrame(self.df["PN"].iloc[start_idx:stop_idx])).reshape(-1)
-        
+
         # fig.add_trace(
         #         go.Scatter(
         #             x=timestamps,
@@ -420,7 +441,6 @@ class Udava:
         #         ),
         #         secondary_y=True,
         # )
-
 
         fig.update_layout(title_text="Cluster labels over time")
         fig.update_xaxes(title_text="date")
@@ -488,14 +508,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-d', '--data_file', help='data file', required=True)
-    parser.add_argument('-t', '--timestamp_column_name',
-            help='file containing predictions', default="Timestamp")
-    parser.add_argument('-c', '--column', help='Which column to use',
-            default="OP390_NC_SP_Torque")
-    parser.add_argument('-w', '--window_size', help='window size', default=100)
-    parser.add_argument('-o', '--overlap', help='overlap', default=0)
-    parser.add_argument('-n', '--n_clusters', help='Number of clusters', default=4)
+    parser.add_argument("-d", "--data_file", help="data file", required=True)
+    parser.add_argument(
+        "-t",
+        "--timestamp_column_name",
+        help="file containing predictions",
+        default="Timestamp",
+    )
+    parser.add_argument(
+        "-c", "--column", help="Which column to use", default="OP390_NC_SP_Torque"
+    )
+    parser.add_argument("-w", "--window_size", help="window size", default=100)
+    parser.add_argument("-o", "--overlap", help="overlap", default=0)
+    parser.add_argument("-n", "--n_clusters", help="Number of clusters", default=4)
 
     args = parser.parse_args()
 
@@ -503,8 +528,7 @@ if __name__ == "__main__":
 
     analysis = Udava(df, timestamp_column_name=args.timestamp_column_name)
     analysis.create_train_test_set(columns=[args.column])
-    analysis.create_fingerprints(window_size=args.window_size,
-            overlap=args.overlap)
+    analysis.create_fingerprints(window_size=args.window_size, overlap=args.overlap)
     # analysis.build_model(n_clusters=int(args.n_clusters))
     # analysis.fit_predict()
     # joblib.dump(analysis.model, "model.pkl")

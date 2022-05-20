@@ -12,23 +12,22 @@ Created:
 import json
 import os
 import sys
-import joblib
 
+import joblib
 import numpy as np
 import pandas as pd
+import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-import yaml
 
-from config import *
-from featurize import *
 from cluster import *
+from config import *
 from evaluate import *
+from featurize import *
 from preprocess_utils import find_files, move_column
 
 
 class ClusterModel:
-
     def __init__(
         self,
         params_file=PARAMS_FILE_PATH,
@@ -38,8 +37,7 @@ class ClusterModel:
     ):
 
         if type(params_file) == dict:
-            yaml.dump(params_file, open("params.yaml", "w"),
-                    allow_unicode=True)
+            yaml.dump(params_file, open("params.yaml", "w"), allow_unicode=True)
             self.params_file = "params.yaml"
         else:
             self.params_file = params_file
@@ -94,7 +92,9 @@ class ClusterModel:
 
         model = joblib.load(MODELS_FILE_PATH)
         labels = model.predict(fingerprints)
-        distance_to_centers, sum_distance_to_centers = calculate_distances(fingerprints, model)
+        distance_to_centers, sum_distance_to_centers = calculate_distances(
+            fingerprints, model
+        )
 
         # plt.figure()
         # plt.plot(labels)
@@ -102,8 +102,9 @@ class ClusterModel:
 
         if plot_results:
             # visualize_clusters(labels, fingerprints, model)
-            fig_div = plot_labels_over_time(fingerprint_timestamps, labels, fingerprints,
-                    inference_df, model)
+            fig_div = plot_labels_over_time(
+                fingerprint_timestamps, labels, fingerprints, inference_df, model
+            )
             # plot_cluster_center_distance(fingerprint_timestamps, fingerprints, model)
             return fig_div
         else:
