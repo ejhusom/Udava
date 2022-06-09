@@ -1,6 +1,7 @@
 featurize:
     # dataset: profileB_combined
     dataset: nova10_p2_medium_every_5th_row
+    # window_size: 10
     window_size: 500
     overlap: 0
     timestamp_column:
@@ -10,12 +11,13 @@ featurize:
 
 cluster:
     learning_method: minibatchkmeans
+    # n_clusters: 3
     n_clusters: 7
     max_iter: 100
     use_predefined_centroids: True
     fix_predefined_centroids: False
-    # annotations_dir:
+    # annotations_dir: benteler
     annotations_dir: nova10v2
-    min_segment_length: 15
+    min_segment_length: 10
 
 evaluate:

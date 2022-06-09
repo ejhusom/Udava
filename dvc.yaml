@@ -26,6 +26,7 @@ stages:
             - src/config.py
         outs:
             - assets/output/labels.csv
+            - assets/output/event_log.csv
             - assets/output/feature_vectors.csv
             - assets/output/cluster_names.csv
             - assets/models

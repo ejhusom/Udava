@@ -92,16 +92,17 @@ def cluster(dir_path=""):
         distances_to_centers, sum_distance_to_centers = calculate_distances(
             feature_vectors, model
         )
-        # print(distances_to_centers)
-        # print(labels)
-        # print(distances_to_centers.shape)
-        # print(labels.shape)
         labels = filter_segments(labels, distances_to_centers, min_segment_length)
+
+    segments = find_segments(labels)
+    event_log = create_event_log(segments)
+    event_log["case"] = params["featurize"]["dataset"]
 
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
     pd.DataFrame(feature_vectors).to_csv(OUTPUT_PATH / "feature_vectors.csv")
+    event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
     dump(model, MODELS_FILE_PATH)
 
@@ -300,6 +301,42 @@ def generate_cluster_names(model):
 
 
 def find_segments(labels):
+    """Find segments in array of labels.
+
+    By segments we mean a continuous sequence of the same label. 
+
+    Args:
+        labels (1d array): Array of labels.
+
+    Returns:
+        segments (2d array): Array of segments.
+
+    Example:
+        Let's say the array of labels looks like this:
+
+        [0, 0, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2]
+
+        In this example we have four segments:
+
+        1. Two zeros: [0, 0]
+        2. Three ones: [1, 1, 1]
+        3. Four zeros: [0, 0, 0, 0]
+        4. Three twos: [2, 2, 2]
+
+        The array `segments` has the following format:
+
+        [segment_index, label, segment_length, start_index, end_index]
+
+        `start_index` and `end_index` are indeces of the `labels` array.
+        In this example it will then return the following:
+
+        [[0, 0, 2, 0, 1],
+         [1, 1, 3, 2, 4],
+         [2, 0, 4, 5, 8],
+         [3, 2, 3, 9, 11]]
+
+
+    """
 
     segments = []
 
@@ -312,6 +349,11 @@ def find_segments(labels):
     for i in range(1, len(labels)):
         if labels[i] == current_label:
             current_length += 1
+            if i == len(labels)-1:
+                end_idx = i
+                segments.append(
+                    [segment_idx, current_label, current_length, start_idx, end_idx]
+                )
         else:
             end_idx = i - 1
             segments.append(
@@ -324,9 +366,28 @@ def find_segments(labels):
 
     return np.array(segments)
 
+def create_event_log(segments):
+
+    events = []
+    feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
+
+    for i in range(len(segments)):
+
+        current_segment = segments[i, :]
+        label = current_segment[1]
+        start_timestamp = feature_vector_timestamps[current_segment[3]]
+        stop_timestamp = feature_vector_timestamps[current_segment[4]]
+
+        events.append([start_timestamp, label, "started"])
+        events.append([stop_timestamp, label, "completed"])
+
+    event_log = pd.DataFrame(events, columns=["timestamp", "label", "status"])
+
+    return event_log
 
 def filter_segments(labels, distances_to_centers, min_segment_length):
 
+    # Array for storing updated labels after short segments are filtered out.
     new_labels = labels.copy()
 
     segments = find_segments(labels)
@@ -354,7 +415,7 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
 
         current_distances = distances_to_centers[start_idx : end_idx + 1, :]
 
-        # Set the original minimum distance to be above the maximum, in order
+        # Set the original smallest distance to be above the maximum, in order
         # to find the second closest cluster center
         current_distances[:, label] = np.max(current_distances) + 1
 
@@ -382,10 +443,10 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
             label_of_next_segment = segments[segment_idx + 1][1]
 
         # If the most frequent second closest cluster center in the segment is
-        # different the previous and next segment, the current segment will be
-        # split in half, and each half will be "swallowed" by the neighboring
-        # segments. Otherwise the label is set to either the previous or next
-        # segment label.
+        # different from the previous and next segment, the current segment
+        # will be split in half, and each half will be "swallowed" by the
+        # neighboring segments. Otherwise the label is set to either the
+        # previous or next segment label.
         if most_frequent_second_closest_cluster_center == label_of_previous_segment:
             current_new_labels[:] = label_of_previous_segment
         elif most_frequent_second_closest_cluster_center == label_of_next_segment:
@@ -393,8 +454,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         else:
             current_new_labels[: length // 2] = label_of_previous_segment
             current_new_labels[length // 2 :] = label_of_next_segment
-            # current_new_labels[:] = label_of_next_segment
-
 
         # Update with new labels
         new_labels[start_idx : end_idx + 1] = current_new_labels
@@ -411,6 +470,7 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         number_of_segments = len(segments)
 
     return new_labels
+
 
 
 if __name__ == "__main__":
