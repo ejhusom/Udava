@@ -472,7 +472,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
     return new_labels
 
 
-
 if __name__ == "__main__":
 
     cluster(sys.argv[1])

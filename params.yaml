@@ -1,11 +1,14 @@
 featurize:
     # dataset: profileB_combined
-    dataset: nova10_p2_medium_every_5th_row
+    # dataset: nova10_p2_medium_every_5th_row
+    dataset: nova10_with_timestamps
     # window_size: 10
     window_size: 500
+    # window_size: 2500
     overlap: 0
-    timestamp_column:
+    convert_timestamp_to_datetime: True
     # timestamp_column: Date/Time
+    timestamp_column: timestamp
     # columns: Stem Force
     columns: Channel_4_Data
 

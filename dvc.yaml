@@ -15,6 +15,7 @@ stages:
             - featurize.dataset
             - featurize.overlap
             - featurize.timestamp_column
+            - featurize.convert_timestamp_to_datetime
             - featurize.window_size
 
     cluster:

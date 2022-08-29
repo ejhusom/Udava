@@ -45,6 +45,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
     window_size = params["featurize"]["window_size"]
     overlap = params["featurize"]["overlap"]
     timestamp_column = params["featurize"]["timestamp_column"]
+    convert_timestamp_to_datetime = params["featurize"]["convert_timestamp_to_datetime"]
 
     if timestamp_column == "":
         timestamp_column = "Unnamed: 0"
@@ -82,13 +83,16 @@ def featurize(dir_path="", inference=False, inference_df=None):
                 df = pd.read_csv(filepath)
                 df = df.set_index(timestamp_column)
 
-            # Attempt to convert timestamps to datetime
-            try:
-                df.index = pd.to_datetime(df.index)
-                # Convert to UNIX time
-                # df.index = df.index.astype(np.int64) // 1e-9
-            except:
-                pass
+            # This needs to be set as a configuration parameter to avoid having
+            # indeces being interpreted as UNIX timestamps.
+            if convert_timestamp_to_datetime:
+                # Attempt to convert timestamps to datetime
+                try:
+                    df.index = pd.to_datetime(df.index)
+                    # Convert to UNIX time
+                    # df.index = df.index.astype(np.int64) // 1e-9
+                except:
+                    pass
 
             # timestamps = np.concatenate([timestamps, df.index])
 
@@ -102,6 +106,13 @@ def featurize(dir_path="", inference=False, inference_df=None):
         combined_df = pd.concat(dfs)
         combined_featurized_df = pd.concat(featurized_dfs)
         fp_timestamps = combined_featurized_df.index
+
+        # FIXME: A problem arises when the input consists of multiple files
+        # with no timestamps, i. e. the indeces are overlapping.
+        # if not convert_timestamp_to_datetime:
+        #     combined_df.reset_index(drop=True, inplace=True)
+            # combined_featurized_df.reset_index(drop=True, inplace=True)
+            # combined_featurized_df.index *= window_size
 
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 

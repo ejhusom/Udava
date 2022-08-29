@@ -148,7 +148,7 @@ def visualize_clusters(
 
     PLOTS_PATH.mkdir(parents=True, exist_ok=True)
     plt.savefig(PLOTS_PATH / "clusters.png", dpi=300)
-    plt.show()
+    # plt.show()
 
 
 def plot_labels_over_time(
@@ -190,6 +190,14 @@ def plot_labels_over_time(
     if n_labels > 10000:
         reduce_plot_size = True
 
+    # If reduce plot size, tak only the nth data point, where nth is set to be
+    # a fraction of the window size. Large fraction of the window size is
+    # small, and small fraction if the window size is large.
+    nth = min(
+            int(window_size/np.log(window_size)),
+            window_size
+    )
+
     j = 0
 
     for i in range(n_features):
@@ -209,9 +217,9 @@ def plot_labels_over_time(
                 color = COLORS[cluster]
 
             if reduce_plot_size:
-                # t = t[::3]
-                # y = y[::3]
-                j += 99
+                t = t[::nth]
+                y = y[::nth]
+                # j += 10
 
             fig.add_trace(
                 go.Scatter(
@@ -262,8 +270,8 @@ def plot_labels_over_time(
     fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
     fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
-    fig.write_html("src/templates/prediction.html")
-    # fig.write_image("labels_over_time.pdf", height=300, width=560)
+    # fig.write_html("src/templates/prediction.html")
+    fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
 
     return fig.to_html(full_html=False)
 
@@ -304,3 +312,4 @@ if __name__ == "__main__":
     )
 
     # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
+
