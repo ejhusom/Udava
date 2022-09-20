@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import yaml
-from catch22 import catch22_all
+# from catch22 import catch22_all
 from mpl_toolkits import mplot3d
 from plotly.subplots import make_subplots
 from sklearn.cluster import (
@@ -187,7 +187,7 @@ def plot_labels_over_time(
 
     timestamps = original_data.index
 
-    if n_labels > 10000:
+    if n_labels > 3000:
         reduce_plot_size = True
 
     # If reduce plot size, tak only the nth data point, where nth is set to be
@@ -197,6 +197,7 @@ def plot_labels_over_time(
             int(window_size/np.log(window_size)),
             window_size
     )
+    nth = 1500
 
     j = 0
 

@@ -187,16 +187,6 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
 
     step = window_size - overlap
 
-    feature_names = [
-        "mean",
-        "median",
-        "std",
-        # "rms",
-        "var",
-        "minmax",
-        "frequency",
-    ]
-
     # Initialize descriptive feature matrices
     mean = np.zeros((n_rows, n_features))
     median = np.zeros((n_rows, n_features))
@@ -205,6 +195,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
     var = np.zeros((n_rows, n_features))
     minmax = np.zeros((n_rows, n_features))
     frequency = np.zeros((n_rows, n_features))
+    gradient = np.zeros((n_rows, n_features))
     feature_vector_timestamps = []
 
     # cfp = np.zeros((n_rows - 1, 22, n_features))
@@ -224,11 +215,12 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
         var[i, :] = np.var(window, axis=0)
         minmax[i, :] = np.max((window), axis=0) - np.min((window), axis=0)
         frequency[i, :] = np.linalg.norm(np.fft.rfft(window, axis=0), axis=0, ord=2)
+        gradient[i, :] = np.mean(np.gradient(window, axis=0))
 
         # for j in range(n_features):
         #     cfp[i, :, j] = catch22_all(window)["values"]
 
-    features = np.concatenate((mean, median, std, var, minmax, frequency), axis=1)
+    features = np.concatenate((mean, median, std, var, minmax, frequency, gradient), axis=1)
     # cfp = np.nan_to_num(cfp)
 
     # features = cfp.reshape(n_rows - 1, 22*n_features)
