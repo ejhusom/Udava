@@ -93,7 +93,7 @@ def cluster(dir_path=""):
             feature_vectors, model
         )
         labels = filter_segments(labels, distances_to_centers, min_segment_length)
-
+    
     segments = find_segments(labels)
     event_log = create_event_log(segments)
     event_log["case"] = params["featurize"]["dataset"]
