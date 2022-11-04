@@ -101,6 +101,7 @@ def cluster(dir_path=""):
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
+    pd.DataFrame(model.cluster_centers_).to_csv(OUTPUT_PATH / "cluster_centers.csv")
     pd.DataFrame(feature_vectors).to_csv(OUTPUT_PATH / "feature_vectors.csv")
     event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
