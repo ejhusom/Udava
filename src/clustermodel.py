@@ -103,7 +103,11 @@ class ClusterModel:
         if plot_results:
             # visualize_clusters(labels, feature_vectors, model)
             fig_div = plot_labels_over_time(
-                feature_vector_timestamps, labels, feature_vectors, inference_df, model
+                feature_vector_timestamps, 
+                labels, 
+                feature_vectors, 
+                inference_df, 
+                model
             )
             # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
             return fig_div

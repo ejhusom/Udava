@@ -106,6 +106,7 @@ class CreateModel(Resource):
             # Read params file
             params_file = flask.request.files["file"]
             params = yaml.safe_load(params_file)
+            print("Reading params-file")
             # flask.session["params"] = params
             # flask.redirect("create_model_form")
         except:
@@ -226,7 +227,7 @@ class InferGUI(Resource):
             output["param"] = {"modeluid": model_id}
             output["scalar"] = {
                 "headers": ["date", "cluster", "metric"],
-                "data": output_data,
+                "data": output_data.tolist(),
             }
 
             return output
@@ -246,11 +247,13 @@ class Infer(Resource):
             input_json["scalar"]["data"],
             columns=input_json["scalar"]["headers"],
         )
-        inference_df.set_index("date", inplace=True)
 
         models = get_models()
         model = models[model_id]
         params = model["params"]
+
+        timestamp_column_name = params["featurize"]["timestamp_column"]
+        inference_df.set_index(timestamp_column_name, inplace=True)
 
         cm = ClusterModel(params_file=params)
 

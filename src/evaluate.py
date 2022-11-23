@@ -190,7 +190,7 @@ def plot_labels_over_time(
     if n_labels > 3000:
         reduce_plot_size = True
 
-    # If reduce plot size, tak only the nth data point, where nth is set to be
+    # If reduce plot size, take only the nth data point, where nth is set to be
     # a fraction of the window size. Large fraction of the window size is
     # small, and small fraction if the window size is large.
     nth = min(
@@ -271,7 +271,7 @@ def plot_labels_over_time(
     fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
     fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
-    # fig.write_html("src/templates/prediction.html")
+    fig.write_html("src/templates/prediction.html")
     fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
 
     return fig.to_html(full_html=False)
