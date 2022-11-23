@@ -618,3 +618,18 @@ progress::-moz-progress-bar {
 progress:indeterminate::-moz-progress-bar {
   background-color: var(--accent-bg);
 }
+
+/* Custom css */
+.container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+}
+.video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
