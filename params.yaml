@@ -47,9 +47,30 @@
 
 ################################################
 # NOVA10 1Hz
+# featurize:
+#     dataset: nova10_p8_1hz
+#     window_size: 2
+#     overlap: 0
+#     convert_timestamp_to_datetime: True
+#     timestamp_column: timestamp
+#     columns: Channel_4_Data
+
+# cluster:
+#     learning_method: minibatchkmeans
+#     n_clusters: 7
+#     max_iter: 100
+#     use_predefined_centroids: True
+#     fix_predefined_centroids: False
+#     annotations_dir: nova10_p8_1hz
+#     min_segment_length: 0
+
+# evaluate:
+
+################################################
+# NOVA10 1Hz
 featurize:
-    dataset: nova10_p8_1hz
-    window_size: 2
+    dataset: nova10_p8_10hz
+    window_size: 20
     overlap: 0
     convert_timestamp_to_datetime: True
     timestamp_column: timestamp
@@ -61,7 +82,7 @@ cluster:
     max_iter: 100
     use_predefined_centroids: True
     fix_predefined_centroids: False
-    annotations_dir: nova10_p8_1hz
+    annotations_dir: nova10_p8_10hz
     min_segment_length: 0
 
 evaluate:
