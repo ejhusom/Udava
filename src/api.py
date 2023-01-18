@@ -107,9 +107,10 @@ class CreateModel(Resource):
             params_file = flask.request.files["file"]
             params = yaml.safe_load(params_file)
             print("Reading params-file")
-            # flask.session["params"] = params
-            # flask.redirect("create_model_form")
+            flask.session["params"] = params
+            flask.redirect("create_model_form")
         except:
+            print("Reading parameters from HTML form")
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
@@ -285,4 +286,4 @@ if __name__ == "__main__":
     # api.add_resource(InferDemo, "/infer_demo")
     api.add_resource(InferGUI, "/infer_gui")
     api.add_resource(Infer, "/infer")
-    app.run()
+    app.run(host="0.0.0.0")

@@ -1,88 +1,16 @@
-# Benteler:
-# featurize:
-#     dataset: profileB_combined
-#     window_size: 5
-#     # window_size: 500
-#     # window_size: 2500
-#     overlap: 0
-#     convert_timestamp_to_datetime: True
-#     timestamp_column: Date/Time
-#     columns: Stem Force
-
-# cluster:
-#     learning_method: minibatchkmeans
-#     n_clusters: 3
-#     max_iter: 100
-#     use_predefined_centroids: False
-#     fix_predefined_centroids: False
-#     annotations_dir: benteler
-#     min_segment_length: 1
-
-# evaluate:
-
-
-
-################################################
-# NOVA10:
-# featurize:
-#     dataset: nova10
-#     # dataset: nova10_p8
-#     window_size: 500
-#     overlap: 0
-#     convert_timestamp_to_datetime: True
-#     timestamp_column: timestamp
-#     columns: Channel_4_Data
-
-# cluster:
-#     learning_method: minibatchkmeans
-#     n_clusters: 7
-#     max_iter: 100
-#     use_predefined_centroids: True
-#     fix_predefined_centroids: False
-#     annotations_dir: nova10v2
-#     min_segment_length: 10
-
-# evaluate:
-
-
-################################################
-# NOVA10 1Hz
-# featurize:
-#     dataset: nova10_p8_1hz
-#     window_size: 2
-#     overlap: 0
-#     convert_timestamp_to_datetime: True
-#     timestamp_column: timestamp
-#     columns: Channel_4_Data
-
-# cluster:
-#     learning_method: minibatchkmeans
-#     n_clusters: 7
-#     max_iter: 100
-#     use_predefined_centroids: True
-#     fix_predefined_centroids: False
-#     annotations_dir: nova10_p8_1hz
-#     min_segment_length: 0
-
-# evaluate:
-
-################################################
-# NOVA10 1Hz
-featurize:
-    dataset: nova10_p8_10hz
-    window_size: 20
-    overlap: 0
-    convert_timestamp_to_datetime: True
-    timestamp_column: timestamp
-    columns: Channel_4_Data
-
 cluster:
-    learning_method: minibatchkmeans
-    n_clusters: 7
-    max_iter: 100
-    use_predefined_centroids: True
-    fix_predefined_centroids: False
-    annotations_dir: nova10_p8_10hz
-    min_segment_length: 0
-
-evaluate:
+  annotations_dir: nova10_p8_10hz
+  fix_predefined_centroids: false
+  learning_method: minibatchkmeans
+  max_iter: 100
+  min_segment_length: 0
+  n_clusters: 7
+  use_predefined_centroids: true
+evaluate: null
+featurize:
+  columns: Channel_4_Data
+  convert_timestamp_to_datetime: true
+  dataset: nova10_p8_10hz
+  overlap: 0
+  timestamp_column: timestamp
+  window_size: 20
