@@ -12,6 +12,7 @@ build*
 *.npy
 # *.json
 models.json
+assets/models_api.json
 annotations.json
 
 

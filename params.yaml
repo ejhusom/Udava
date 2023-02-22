@@ -1,5 +1,5 @@
 cluster:
-  annotations_dir: nova10_p8_10hz
+  annotations_dir: nova10_p8_10hz_annotations
   fix_predefined_centroids: false
   learning_method: minibatchkmeans
   max_iter: 100
@@ -13,4 +13,4 @@ featurize:
   dataset: nova10_p8_10hz
   overlap: 0
   timestamp_column: timestamp
-  window_size: 20
+  window_size: 10

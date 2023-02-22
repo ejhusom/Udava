@@ -28,6 +28,7 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from clustermodel import ClusterModel
+from config import API_MODELS_PATH
 from udava import Udava
 
 app = flask.Flask(__name__)
@@ -84,7 +85,7 @@ def prediction():
 def get_models():
 
     try:
-        models = json.load(open("models.json"))
+        models = json.load(open(API_MODELS_PATH))
     except:
         models = {}
 
@@ -95,7 +96,7 @@ class CreateModel(Resource):
     def get(self):
 
         try:
-            models = json.load(open("models.json"))
+            models = json.load(open(API_MODELS_PATH))
             return models, 200
         except:
             return {"message": "No models exist."}, 401
@@ -107,8 +108,8 @@ class CreateModel(Resource):
             params_file = flask.request.files["file"]
             params = yaml.safe_load(params_file)
             print("Reading params-file")
-            flask.session["params"] = params
-            flask.redirect("create_model_form")
+            # flask.session["params"] = params
+            # flask.redirect("create_model_form")
         except:
             print("Reading parameters from HTML form")
             params = yaml.safe_load(open("params_default.yaml"))
@@ -148,14 +149,14 @@ class CreateModel(Resource):
         ]
 
         try:
-            models = json.load(open("models.json"))
+            models = json.load(open(API_MODELS_PATH))
         except:
             models = {}
 
         models[model_id] = model_metadata
         print(models)
 
-        json.dump(models, open("models.json", "w+"))
+        json.dump(models, open(API_MODELS_PATH, "w+"))
 
         return flask.redirect("create_model_form")
 

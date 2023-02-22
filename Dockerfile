@@ -2,6 +2,7 @@ FROM python:3.8
 
 WORKDIR /usr/Udava
 
+RUN mkdir -p assets/data/raw
 
 COPY requirements.txt ./requirements.txt
 RUN pip3 install -r requirements.txt
@@ -10,11 +11,9 @@ RUN pip3 install flask flask-restful
 
 COPY src ./src
 COPY dvc.yaml ./dvc.yaml
-COPY params.yaml ./params.yaml
-# COPY params_default.yaml ./params.yaml
+# COPY params.yaml ./params.yaml
+COPY params_default.yaml ./params.yaml
 COPY params_default.yaml ./params_default.yaml
-
-RUN mkdir -p assets/data/raw
 
 EXPOSE 5000
 
