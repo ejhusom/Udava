@@ -29,6 +29,7 @@ from sklearn.cluster import (
     MeanShift,
     MiniBatchKMeans,
 )
+from sklearn.metrics import euclidean_distances
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -96,7 +97,8 @@ def visualize_clusters(
     clusters = np.unique(labels)
 
     if mark_outliers:
-        dist = model.transform(feature_vectors)
+        # dist = model.transform(feature_vectors)
+        dist = euclidean_distances(feature_vectors, model.cluster_centers_)
         labels = filter_outliers(labels, dist)
 
     if dim3 is None:
@@ -174,7 +176,8 @@ def plot_labels_over_time(
 
     step = window_size - overlap
 
-    dist = model.transform(feature_vectors)
+    # dist = model.transform(feature_vectors)
+    dist = euclidean_distances(feature_vectors, model.cluster_centers_)
     sum_dist = dist.sum(axis=1)
 
     if mark_outliers:
@@ -279,7 +282,8 @@ def plot_labels_over_time(
 
 def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
 
-    dist = model.transform(feature_vectors)
+    # dist = model.transform(feature_vectors)
+    dist = euclidean_distances(feature_vectors, model.cluster_centers_)
     dist = dist.sum(axis=1)
     avg_dist = pd.Series(dist).rolling(50).mean()
 

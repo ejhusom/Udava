@@ -124,18 +124,24 @@ class CreateModel(Resource):
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
 
-        # Create dict containing all metadata about models
-        model_metadata = {}
-        # The ID of the model is given an UUID.
-        model_id = str(uuid.uuid4())
-        model_metadata["id"] = model_id
-        model_metadata["params"] = params
 
         # Save params to be used by DVC when creating virtual sensor.
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
         # Run DVC to create virtual sensor.
         subprocess.run(["dvc", "repro", "cluster"], check=True)
+
+        # Reread params-file, in case it is changed during pipeline execution
+        # (e.g., the number of clusters).
+        with open("params.yaml", "r") as params_file:
+            params = yaml.safe_load(params_file)
+
+        # Create dict containing all metadata about model
+        model_metadata = {}
+        # The ID of the model is given an UUID.
+        model_id = str(uuid.uuid4())
+        model_metadata["id"] = model_id
+        model_metadata["params"] = params
 
         # TODO: Compute metrics
         # metrics = json.load(open(METRICS_FILE_PATH))

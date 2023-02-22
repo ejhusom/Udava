@@ -24,6 +24,7 @@ from sklearn.cluster import (
     MeanShift,
     MiniBatchKMeans,
 )
+from sklearn.metrics import euclidean_distances
 
 from annotations import *
 from config import *
@@ -80,13 +81,46 @@ def cluster(dir_path=""):
         labels, model = fit_predict_with_predefined_centroids(
             feature_vectors,
             model,
+            learning_method,
             n_clusters,
             predefined_centroids_dict,
             fix_predefined_centroids,
             max_iter=max_iter,
         )
     else:
+        # TODO: Might consider iterating through damping values for
+        # AffinityPropagation to increase chances of convergence.
+        # if learning_method == "affinitypropagation":
+        #     current_n_clusters = 0
+        #     damping = 0.5
+        #     while damping =< 1.0:
+        #         model = AffinityPropagation(damping=damping, max_iter=1000, verbose=True)
+        #         labels, model = fit_predict(feature_vectors, model)
+        #         if C
+        # else:
         labels, model = fit_predict(feature_vectors, model)
+
+    # Clustering algorithms like AffinityPropagation might fail to converge,
+    # so MiniBatchKMeans serves as a fallback method.
+    if len(model.cluster_centers_) == 0:
+        print("Clustering failed to converge; falling back to MiniBatchKMeans.")
+        model = MiniBatchKMeans(n_clusters=n_clusters, max_iter=max_iter)
+        labels, model = fit_predict(feature_vectors, model)
+
+    n_clusters = len(model.cluster_centers_)
+    print("==========")
+    print(n_clusters)
+    print("==========")
+    params["cluster"]["n_clusters"] = n_clusters
+
+    # TODO: Not sure if it is a good idea to rewrite params.yaml during
+    # execution of the pipeline.
+    with open("params.yaml", "w") as params_file:
+        yaml.dump(params, params_file)
+
+
+    with open("params.yaml", "r") as params_file:
+        params = yaml.safe_load(params_file)
 
     if min_segment_length > 0:
         distances_to_centers, sum_distance_to_centers = calculate_distances(
@@ -94,29 +128,36 @@ def cluster(dir_path=""):
         )
         labels = filter_segments(labels, distances_to_centers, min_segment_length)
     
+    # Create segments and event log
     segments = find_segments(labels)
     event_log = create_event_log(segments)
     event_log["case"] = params["featurize"]["dataset"]
 
+    # Save output
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
     pd.DataFrame(model.cluster_centers_).to_csv(OUTPUT_PATH / "cluster_centers.csv")
     pd.DataFrame(feature_vectors).to_csv(OUTPUT_PATH / "feature_vectors.csv")
     event_log.to_csv(OUTPUT_PATH / "event_log.csv")
-
     dump(model, MODELS_FILE_PATH)
 
+    # Create and save cluster names
     cluster_names = generate_cluster_names(model)
 
+    # Use cluster names from annotated data, if the number of clusters still
+    # matches the number of unique annotation label (the number of clusters
+    # might change when using cluster algorithms that automatically decide on a
+    # suitable number of clusters.
     if use_predefined_centroids:
-        for i, key in enumerate(predefined_centroids_dict):
-            cluster_names["cluster_name"][i] = (
-                str(cluster_names["cluster_name"][i].split(":")[0])
-                + ": "
-                + f" {key}, ".upper()
-                + str(cluster_names["cluster_name"][i].split(":")[1])
-            )
+        if len(predefined_centroids_dict) == n_clusters:
+            for i, key in enumerate(predefined_centroids_dict):
+                cluster_names["cluster_name"][i] = (
+                    str(cluster_names["cluster_name"][i].split(":")[0])
+                    + ": "
+                    + f" {key}, ".upper()
+                    + str(cluster_names["cluster_name"][i].split(":")[1])
+                )
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
@@ -137,11 +178,18 @@ def build_model(learning_method, n_clusters, max_iter):
         model = MeanShift()
     elif learning_method == "minibatchkmeans":
         model = MiniBatchKMeans(n_clusters=n_clusters, max_iter=max_iter)
+    elif learning_method == "affinitypropagation":
+        model = AffinityPropagation(damping=0.9, max_iter=1000, verbose=True)
+    # TODO: To make DBSCAN work, we need to manually compute cluster centroids
+    # (at least if we want to support the deviation metric), or we have to
+    # remove dependence on cluster centroids being defined for any model.
+    # elif learning_method == "dbscan":
+    #     model = DBSCAN()
     else:
-        model = MiniBatchKMeans(n_clusters=n_clusters, max_iter=max_iter)
+        raise NotImplementedError(f"Learning method {learning_method} not implemented.")
+
     # model = DBSCAN(eps=0.30, min_samples=3)
     # model = GaussianMixture(n_components=1)
-    # model = AffinityPropagation(damping=0.5)
 
     return model
 
@@ -156,6 +204,7 @@ def fit_predict(feature_vectors, model):
 def fit_predict_with_predefined_centroids(
     feature_vectors,
     model,
+    learning_method,
     n_clusters,
     predefined_centroids_dict,
     fix_predefined_centroids=False,
@@ -196,15 +245,24 @@ def fit_predict_with_predefined_centroids(
         # If the predefined centroids should be fixed, simply use the
         # predefined centroids as the model's cluster centers.
         if fix_predefined_centroids:
+            print("Using fix_predefined_centroids=True, clustering is skipped.")
             model = MiniBatchKMeans(max_iter=1, n_clusters=n_clusters)
             model.fit(feature_vectors)
             model.cluster_centers_ = predefined_centroids
             labels = model.predict(feature_vectors)
-
         else:
-            model = MiniBatchKMeans(
-                max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
-            )
+            if learning_method == "meanshift":
+                model = MeanShift(seeds=predefined_centroids)
+            elif learning_method == "minibatchkmeans":
+                model = MiniBatchKMeans(
+                    max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
+                )
+            else:
+                print(f"Cannot use predefined centroids with learning method {learning_method}. Falling back to MiniBatchKMeans.")
+                model = MiniBatchKMeans(
+                    max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
+                )
+
             labels = model.fit_predict(feature_vectors)
 
         return labels, model
@@ -257,7 +315,9 @@ def predict(feature_vectors, model):
 
 def calculate_distances(feature_vectors, model):
 
-    distances_to_centers = model.transform(feature_vectors)
+    # distances_to_centers = model.transform(feature_vectors)
+    distances_to_centers = euclidean_distances(feature_vectors,
+            model.cluster_centers_)
     sum_distance_to_centers = distances_to_centers.sum(axis=1)
 
     return distances_to_centers, sum_distance_to_centers
@@ -277,6 +337,8 @@ def generate_cluster_names(model):
     num_clusters = model.cluster_centers_.shape[0]
     levels = ["lowest", "low", "medium", "high", "highest"]
     cluster_names = []
+
+    print(COLORS)
 
     for i in range(num_clusters):
         # cluster_names.append(str(i) + ": ")

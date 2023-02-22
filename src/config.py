@@ -10,21 +10,10 @@ Author:   Erik Johannes Husom
 Created:  2021-11-29 Monday 10:55:44
 
 """
+import matplotlib.colors as mcolors
 
 from pathlib import Path
 
-COLORS = [
-    "red",
-    "green",
-    "blue",
-    "brown",
-    "yellow",
-    "purple",
-    "grey",
-    "black",
-    "pink",
-    "orange",
-]
 
 PARAMS_FILE_PATH = Path("./params.yaml")
 """Path to params file."""
@@ -101,3 +90,18 @@ OUTPUT_SCALER_PATH = SCALER_PATH / "output_scaler.z"
 """Path to output scaler."""
 
 FEATURE_NAMES = ["mean", "median", "std", "var", "minmax", "frequency", "gradient"]
+
+COLORS = [
+    "red",
+    "green",
+    "blue",
+    "brown",
+    "yellow",
+    "purple",
+    "grey",
+    "black",
+    "pink",
+    "orange",
+]
+
+COLORS += list(mcolors.CSS4_COLORS.keys())
