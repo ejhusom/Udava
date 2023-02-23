@@ -11,7 +11,27 @@
                         <th>Window size</th>
                         <th>Number of clusters</th>
                         <th>Cluster method</th>
-                        <!-- <th>TODO: Compute metric</th> -->
+                        <th class=header-tooltip>Silhouette Score &#9432;
+                            <span class=header-tooltiptext>
+                                Silhouette Score:<br>
+                                The best value is 1 and the worst value is -1. Values near 0 indicate overlapping clusters. <br>
+                                <!-- <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html">Read more</a>. -->
+                            </span>
+                        </th>
+                        <th class=header-tooltip>Caliniski-Harabasz Index &#9432;
+                            <span class=header-tooltiptext>
+                                Caliniski-Harabasz Index:<br>
+                                The score is higher when clusters are dense and well separated, which relates to a standard concept of a cluster.<br>
+                                <!-- <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.calinski_harabasz_score.html#sklearn.metrics.calinski_harabasz_score">Read more</a>. -->
+                            </span>
+                        </th>
+                        <th class=header-tooltip>Davies-Bouldin Index &#9432;
+                            <span class=header-tooltiptext>
+                                Davies-Bouldin Index:<br>
+                                The minimum score is zero, with lower values indicating better clustering.
+                                <!-- <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.davies_bouldin_score.html#sklearn.metrics.davies_bouldin_score">Read more</a>. -->
+                            </span>
+                        </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -21,7 +41,7 @@
                             <td>{{models[model]["params"]["featurize"]["dataset"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["columns"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["window_size"]}}</td>
-                            <td class=tooltip>{{models[model]["params"]["cluster"]["n_clusters"]}}
+                            <td class=tooltip>{{models[model]["params"]["cluster"]["n_clusters"]}} &#9432;
                                 <span class=tooltiptext>
                                     Cluster characteristics:<br>
                                 {%for cluster in models[model]["cluster_characteristics"]%}<br>
@@ -30,6 +50,9 @@
                                 </span>
                             </td>
                             <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
+                            <td>{{"%0.2f"|format(models[model]["metrics"]["silhouette_score"]|float)}}</td>
+                            <td>{{"%0.2f"|format(models[model]["metrics"]["calinski_harabasz_score"]|float)}}</td>
+                            <td>{{"%0.2f"|format(models[model]["metrics"]["davies_bouldin_score"]|float)}}</td>
                             <!-- <td>NaN</td> -->
                             <!-- <tr><td colspan="6"><p> -->
                             <!--     {%for cluster in models[model]["cluster_characteristics"]%}<br> -->

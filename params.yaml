@@ -1,10 +1,10 @@
 cluster:
   annotations_dir: nova10_p8_10hz_annotations
   fix_predefined_centroids: false
-  learning_method: dbscan
+  learning_method: affinitypropagation
   max_iter: 100
   min_segment_length: 0
-  n_clusters: 8
+  n_clusters: 7
   use_predefined_centroids: false
 evaluate: null
 featurize:

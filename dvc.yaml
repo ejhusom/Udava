@@ -39,6 +39,8 @@ stages:
             - cluster.fix_predefined_centroids
             - cluster.annotations_dir
             - cluster.min_segment_length
+        metrics:
+        - assets/metrics/metrics.json
 
     evaluate:
         cmd: python3 src/evaluate.py
@@ -53,6 +55,3 @@ stages:
         outs:
             - assets/plots/clusters.png
             - assets/plots/labels_over_time.html
-    #     metrics:
-    #     - assets/metrics/metrics.json
-

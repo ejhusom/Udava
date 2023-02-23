@@ -28,7 +28,7 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from clustermodel import ClusterModel
-from config import API_MODELS_PATH
+from config import API_MODELS_PATH, METRICS_FILE_PATH
 from udava import Udava
 
 app = flask.Flask(__name__)
@@ -142,9 +142,11 @@ class CreateModel(Resource):
         model_metadata["id"] = model_id
         model_metadata["params"] = params
 
-        # TODO: Compute metrics
-        # metrics = json.load(open(METRICS_FILE_PATH))
-        # model_metadata["metrics"] = metrics
+        metrics = json.load(open(METRICS_FILE_PATH))
+        model_metadata["metrics"] = metrics
+        # try:
+        # except:
+        #     model_metadata["metrics"] = {}
 
         # Read cluster characteristics
         cluster_characteristics = pd.read_csv("assets/output/cluster_names.csv")

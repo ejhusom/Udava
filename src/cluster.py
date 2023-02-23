@@ -23,8 +23,9 @@ from sklearn.cluster import (
     KMeans,
     MeanShift,
     MiniBatchKMeans,
+    AgglomerativeClustering,
 )
-from sklearn.metrics import euclidean_distances
+from sklearn.metrics import euclidean_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
 from annotations import *
 from config import *
@@ -118,18 +119,23 @@ def cluster(dir_path=""):
     # following clustering algorithms:
     # - DBSCAN
     try:
-        # print(yolo)
         cluster_centers = model.cluster_centers_
     except:
         cluster_centers = []
         for c in unique_labels:
-            print("===========")
-            print(c)
             current_label_feature_vectors = []
-            for i in model.core_sample_indices_:
-            # This one will use all feature vectors instead of just the core
-            # samples:
-            # for i in range(feature_vectors.shape[0]):
+
+            # Find the indeces of the samples to use for computing cluster
+            # centers. For models with core samples, for example DBSCAN, these
+            # will be used. Other wise all samples in each cluster will be
+            # used. The cluster centers will be the average of these samples
+            # (either core samples or all samples).
+            try:
+                samples_indeces = model.core_sample_indices_
+            except:
+                samples_indeces = np.arange(feature_vectors.shape[0])
+
+            for i in samples_indeces:
                 if labels[i] == c:
                     current_label_feature_vectors.append(feature_vectors[i])
 
@@ -206,6 +212,34 @@ def cluster(dir_path=""):
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
+    METRICS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    metrics = evaluate_model(model, feature_vectors, labels)
+
+    with open(METRICS_FILE_PATH, "w") as f:
+        json.dump(metrics, f)
+    
+def evaluate_model(model, feature_vectors, labels):
+    """Evaluate the cluster model.
+
+    Silhouette score: Bounded between -1 for incorrect clustering and +1 for
+        highly dense clustering. Scores around zero indicate overlapping clusters.
+    Calinski-Harabasz Index: Higher when clusters are dense and well separated.
+    Davies-Bouldin Index: Zero is the lowest score. Lower scores indicate a
+        better partition.
+
+    """
+
+    silhouette = silhouette_score(feature_vectors, labels)
+    chs = calinski_harabasz_score(feature_vectors, labels)
+    dbs = davies_bouldin_score(feature_vectors, labels)
+
+    metrics = {
+            "silhouette_score": silhouette,
+            "calinski_harabasz_score": chs,
+            "davies_bouldin_score": dbs,
+    }
+
+    return metrics
 
 def build_model(learning_method, n_clusters, max_iter):
     """Build clustering model.
