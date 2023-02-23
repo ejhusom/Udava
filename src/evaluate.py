@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import yaml
+
 # from catch22 import catch22_all
 from mpl_toolkits import mplot3d
 from plotly.subplots import make_subplots
@@ -196,10 +197,7 @@ def plot_labels_over_time(
     # If reduce plot size, take only the nth data point, where nth is set to be
     # a fraction of the window size. Large fraction of the window size is
     # small, and small fraction if the window size is large.
-    nth = min(
-            int(window_size/np.log(window_size)),
-            window_size
-    )
+    nth = min(int(window_size / np.log(window_size)), window_size)
     nth = 1500
 
     j = 0
@@ -305,7 +303,9 @@ if __name__ == "__main__":
     feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
     model = joblib.load(MODELS_FILE_PATH)
 
-    visualize_clusters(labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False)
+    visualize_clusters(
+        labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False
+    )
     plot_labels_over_time(
         feature_vector_timestamps,
         labels,
@@ -317,4 +317,3 @@ if __name__ == "__main__":
     )
 
     # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
-

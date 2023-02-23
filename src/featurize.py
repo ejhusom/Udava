@@ -111,8 +111,8 @@ def featurize(dir_path="", inference=False, inference_df=None):
         # with no timestamps, i. e. the indeces are overlapping.
         # if not convert_timestamp_to_datetime:
         #     combined_df.reset_index(drop=True, inplace=True)
-            # combined_featurized_df.reset_index(drop=True, inplace=True)
-            # combined_featurized_df.index *= window_size
+        # combined_featurized_df.reset_index(drop=True, inplace=True)
+        # combined_featurized_df.index *= window_size
 
         OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
@@ -220,7 +220,9 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
         # for j in range(n_features):
         #     cfp[i, :, j] = catch22_all(window)["values"]
 
-    features = np.concatenate((mean, median, std, var, minmax, frequency, gradient), axis=1)
+    features = np.concatenate(
+        (mean, median, std, var, minmax, frequency, gradient), axis=1
+    )
     # cfp = np.nan_to_num(cfp)
 
     # features = cfp.reshape(n_rows - 1, 22*n_features)
@@ -230,7 +232,9 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
     # print(f"Features shape: {features.shape}")
 
     # feature_vector_timestamps = timestamps[::step]
-    feature_vector_timestamps = pd.Index(feature_vector_timestamps, dtype=object, name="Date")
+    feature_vector_timestamps = pd.Index(
+        feature_vector_timestamps, dtype=object, name="Date"
+    )
 
     return features, feature_vector_timestamps
 

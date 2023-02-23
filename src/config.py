@@ -10,10 +10,9 @@ Author:   Erik Johannes Husom
 Created:  2021-11-29 Monday 10:55:44
 
 """
-import matplotlib.colors as mcolors
-
 from pathlib import Path
 
+import matplotlib.colors as mcolors
 
 PARAMS_FILE_PATH = Path("./params.yaml")
 """Path to params file."""

@@ -124,7 +124,6 @@ class CreateModel(Resource):
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
 
-
         # Save params to be used by DVC when creating virtual sensor.
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 

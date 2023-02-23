@@ -118,7 +118,6 @@ def cluster(dir_path=""):
     with open("params.yaml", "w") as params_file:
         yaml.dump(params, params_file)
 
-
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
@@ -127,7 +126,7 @@ def cluster(dir_path=""):
             feature_vectors, model
         )
         labels = filter_segments(labels, distances_to_centers, min_segment_length)
-    
+
     # Create segments and event log
     segments = find_segments(labels)
     event_log = create_event_log(segments)
@@ -258,7 +257,9 @@ def fit_predict_with_predefined_centroids(
                     max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
                 )
             else:
-                print(f"Cannot use predefined centroids with learning method {learning_method}. Falling back to MiniBatchKMeans.")
+                print(
+                    f"Cannot use predefined centroids with learning method {learning_method}. Falling back to MiniBatchKMeans."
+                )
                 model = MiniBatchKMeans(
                     max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
                 )
@@ -316,8 +317,7 @@ def predict(feature_vectors, model):
 def calculate_distances(feature_vectors, model):
 
     # distances_to_centers = model.transform(feature_vectors)
-    distances_to_centers = euclidean_distances(feature_vectors,
-            model.cluster_centers_)
+    distances_to_centers = euclidean_distances(feature_vectors, model.cluster_centers_)
     sum_distance_to_centers = distances_to_centers.sum(axis=1)
 
     return distances_to_centers, sum_distance_to_centers
@@ -366,7 +366,7 @@ def generate_cluster_names(model):
 def find_segments(labels):
     """Find segments in array of labels.
 
-    By segments we mean a continuous sequence of the same label. 
+    By segments we mean a continuous sequence of the same label.
 
     Args:
         labels (1d array): Array of labels.
@@ -412,7 +412,7 @@ def find_segments(labels):
     for i in range(1, len(labels)):
         if labels[i] == current_label:
             current_length += 1
-            if i == len(labels)-1:
+            if i == len(labels) - 1:
                 end_idx = i
                 segments.append(
                     [segment_idx, current_label, current_length, start_idx, end_idx]
@@ -428,6 +428,7 @@ def find_segments(labels):
             start_idx = i
 
     return np.array(segments)
+
 
 def create_event_log(segments):
 
@@ -448,6 +449,7 @@ def create_event_log(segments):
 
     return event_log
 
+
 def filter_segments(labels, distances_to_centers, min_segment_length):
 
     # Array for storing updated labels after short segments are filtered out.
@@ -457,7 +459,7 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
 
     segments_sorted_on_length = segments[segments[:, 2].argsort()]
 
-    shortest_segment = np.min(segments[:,2])
+    shortest_segment = np.min(segments[:, 2])
     number_of_segments = len(segments)
 
     # Filter out the segments which are too short
@@ -475,7 +477,6 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         if length >= min_segment_length:
             break
 
-
         current_distances = distances_to_centers[start_idx : end_idx + 1, :]
 
         # Set the original smallest distance to be above the maximum, in order
@@ -488,7 +489,10 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         # Find the most frequent second closest cluster center in the segment
         counts = np.bincount(second_closest_cluster_centers)
         most_frequent_second_closest_cluster_center = np.argmax(counts)
-        current_new_labels = np.ones_like(second_closest_cluster_centers) * most_frequent_second_closest_cluster_center
+        current_new_labels = (
+            np.ones_like(second_closest_cluster_centers)
+            * most_frequent_second_closest_cluster_center
+        )
 
         # Find the neighboring segment labels
         if segment_idx == 0:
@@ -524,7 +528,7 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
         # Recompute segments, since they now have changed
         segments = find_segments(new_labels)
         segments_sorted_on_length = segments[segments[:, 2].argsort()]
-        shortest_segment = np.min(segments[:,2])
+        shortest_segment = np.min(segments[:, 2])
 
         if len(segments) == number_of_segments:
             print("Could not remove any more segments.")
