@@ -83,6 +83,7 @@ def visualize_clusters(
     width=10,
     height=10,
     mark_outliers=False,
+    label_data_points=False,
 ):
     """Plot data point and cluster centers in a reduced feature space.
 
@@ -96,10 +97,12 @@ def visualize_clusters(
     """
 
     clusters = np.unique(labels)
+    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
+            index_col=0).to_numpy()
 
     if mark_outliers:
         # dist = model.transform(feature_vectors)
-        dist = euclidean_distances(feature_vectors, model.cluster_centers_)
+        dist = euclidean_distances(feature_vectors, cluster_centers)
         labels = filter_outliers(labels, dist)
 
     if dim3 is None:
@@ -112,7 +115,13 @@ def visualize_clusters(
                 current_cluster_points[:, dim1],
                 current_cluster_points[:, dim2],
                 color=COLORS[c],
+                label=f"Cluster {c}"
             )
+
+            if label_data_points:
+                for i in range(current_cluster_points.shape[0]):
+                    plt.annotate(c, (current_cluster_points[i, dim1],
+                        current_cluster_points[i, dim2]))
 
         if mark_outliers:
             current_cluster_indeces = np.where(labels == -1)
@@ -123,15 +132,21 @@ def visualize_clusters(
                 color="grey",
             )
 
-        for c in clusters:
+        for i, c in enumerate(clusters):
             plt.scatter(
-                model.cluster_centers_[c, dim1],
-                model.cluster_centers_[c, dim2],
+                cluster_centers[i, dim1],
+                cluster_centers[i, dim2],
                 s=90,
                 c=COLORS[c],
                 edgecolors="black",
                 marker="d",
             )
+
+            if label_data_points:
+                plt.annotate(c, (cluster_centers[i, dim1],
+                    cluster_centers[i, dim2]))
+
+        plt.legend()
 
     else:
         fig = plt.figure(figsize=(10, 10))
@@ -143,9 +158,9 @@ def visualize_clusters(
             alpha=0.1,
         )
         ax.scatter(
-            model.cluster_centers_[:, dim1],
-            model.cluster_centers_[:, dim2],
-            model.cluster_centers_[:, dim3],
+            cluster_centers[:, dim1],
+            cluster_centers[:, dim2],
+            cluster_centers[:, dim3],
             alpha=1.0,
         )
 
@@ -172,13 +187,16 @@ def plot_labels_over_time(
     overlap = params["featurize"]["overlap"]
     columns = params["featurize"]["columns"]
 
+    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
+            index_col=0).to_numpy()
+
     if type(columns) is str:
         columns = [columns]
 
     step = window_size - overlap
 
     # dist = model.transform(feature_vectors)
-    dist = euclidean_distances(feature_vectors, model.cluster_centers_)
+    dist = euclidean_distances(feature_vectors, cluster_centers)
     sum_dist = dist.sum(axis=1)
 
     if mark_outliers:
@@ -280,8 +298,11 @@ def plot_labels_over_time(
 
 def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
 
+    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
+            index_col=0).to_numpy()
+
     # dist = model.transform(feature_vectors)
-    dist = euclidean_distances(feature_vectors, model.cluster_centers_)
+    dist = euclidean_distances(feature_vectors, cluster_centers)
     dist = dist.sum(axis=1)
     avg_dist = pd.Series(dist).rolling(50).mean()
 
@@ -315,5 +336,6 @@ if __name__ == "__main__":
         mark_outliers=False,
         show_local_distance=False,
     )
+
 
     # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)

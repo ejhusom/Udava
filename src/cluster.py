@@ -100,17 +100,12 @@ def cluster(dir_path=""):
         # else:
         labels, model = fit_predict(feature_vectors, model)
 
-    # Clustering algorithms like AffinityPropagation might fail to converge,
-    # so MiniBatchKMeans serves as a fallback method.
-    if len(model.cluster_centers_) == 0:
-        print("Clustering failed to converge; falling back to MiniBatchKMeans.")
-        model = MiniBatchKMeans(n_clusters=n_clusters, max_iter=max_iter)
-        labels, model = fit_predict(feature_vectors, model)
+    unique_labels = np.unique(labels)
 
-    n_clusters = len(model.cluster_centers_)
-    print("==========")
-    print(n_clusters)
-    print("==========")
+    # if unique_labels[0] == -1:
+    #     unique_labels = unique_labels[1:]
+
+    n_clusters = len(unique_labels)
     params["cluster"]["n_clusters"] = n_clusters
 
     # TODO: Not sure if it is a good idea to rewrite params.yaml during
@@ -118,14 +113,59 @@ def cluster(dir_path=""):
     with open("params.yaml", "w") as params_file:
         yaml.dump(params, params_file)
 
-    with open("params.yaml", "r") as params_file:
-        params = yaml.safe_load(params_file)
+    # If the model does not calculate its own cluster centers, do the
+    # computation manually based on core samples or similar. Applies for the
+    # following clustering algorithms:
+    # - DBSCAN
+    try:
+        # print(yolo)
+        cluster_centers = model.cluster_centers_
+    except:
+        cluster_centers = []
+        for c in unique_labels:
+            print("===========")
+            print(c)
+            current_label_feature_vectors = []
+            for i in model.core_sample_indices_:
+            # This one will use all feature vectors instead of just the core
+            # samples:
+            # for i in range(feature_vectors.shape[0]):
+                if labels[i] == c:
+                    current_label_feature_vectors.append(feature_vectors[i])
 
+            if current_label_feature_vectors:
+                # Convert to array
+                current_label_feature_vectors = np.array(current_label_feature_vectors)
+                # Take the average features of the core samples
+                average_feature_vector = np.average(current_label_feature_vectors, axis=0)
+                # Add to the cluster centers
+                cluster_centers.append(average_feature_vector)
+
+            else:
+                # If a cluster contains no samples, add an empty cluster center
+                cluster_centers.append(np.zeros(feature_vectors.shape[-1]) *
+                        0)
+                        # np.nan)
+
+        cluster_centers = np.array(cluster_centers)
+
+    assert n_clusters == cluster_centers.shape[0]
+
+    # Clustering algorithms like AffinityPropagation might fail to converge,
+    # so MiniBatchKMeans serves as a fallback method.
+    if n_clusters == 0:
+        print("Clustering failed to converge; falling back to MiniBatchKMeans.")
+        model = MiniBatchKMeans(n_clusters=n_clusters, max_iter=max_iter)
+        labels, model = fit_predict(feature_vectors, model)
+
+    # If the minimum segment length is set to be a non-zero value, we need to
+    # filter the segments.
     if min_segment_length > 0:
         distances_to_centers, sum_distance_to_centers = calculate_distances(
             feature_vectors, model
         )
-        labels = filter_segments(labels, distances_to_centers, min_segment_length)
+        labels = filter_segments(labels, min_segment_length,
+                distances_to_centers)
 
     # Create segments and event log
     segments = find_segments(labels)
@@ -136,13 +176,19 @@ def cluster(dir_path=""):
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(labels).to_csv(OUTPUT_PATH / "labels.csv")
-    pd.DataFrame(model.cluster_centers_).to_csv(OUTPUT_PATH / "cluster_centers.csv")
+    
+    pd.DataFrame(cluster_centers).to_csv(OUTPUT_PATH / "cluster_centers.csv")
+    # try:
+    #     pd.DataFrame(model.cluster_centers_).to_csv(OUTPUT_PATH / "cluster_centers.csv")
+    # except:
+    #     print("Failed to save cluster centers, because clustering algorithm does not define cluster centers.")
+
     pd.DataFrame(feature_vectors).to_csv(OUTPUT_PATH / "feature_vectors.csv")
     event_log.to_csv(OUTPUT_PATH / "event_log.csv")
     dump(model, MODELS_FILE_PATH)
 
     # Create and save cluster names
-    cluster_names = generate_cluster_names(model)
+    cluster_names = generate_cluster_names(model, cluster_centers)
 
     # Use cluster names from annotated data, if the number of clusters still
     # matches the number of unique annotation label (the number of clusters
@@ -182,8 +228,8 @@ def build_model(learning_method, n_clusters, max_iter):
     # TODO: To make DBSCAN work, we need to manually compute cluster centroids
     # (at least if we want to support the deviation metric), or we have to
     # remove dependence on cluster centroids being defined for any model.
-    # elif learning_method == "dbscan":
-    #     model = DBSCAN()
+    elif learning_method == "dbscan":
+        model = DBSCAN()
     else:
         raise NotImplementedError(f"Learning method {learning_method} not implemented.")
 
@@ -299,9 +345,20 @@ def fit_predict_with_predefined_centroids(
             labels = model.predict(feature_vectors)
 
         else:
-            model = MiniBatchKMeans(
-                max_iter=max_iter, n_clusters=n_clusters, init=initial_centroids
-            )
+            if learning_method == "meanshift":
+                model = MeanShift(seeds=initial_centroids)
+            elif learning_method == "minibatchkmeans":
+                model = MiniBatchKMeans(
+                    max_iter=max_iter, n_clusters=n_clusters, init=initial_centroids
+                )
+            else:
+                print(
+                    f"Cannot use predefined centroids with learning method {learning_method}. Falling back to MiniBatchKMeans."
+                )
+                model = MiniBatchKMeans(
+                    max_iter=max_iter, n_clusters=n_clusters, init=predefined_centroids
+                )
+
             labels = model.fit_predict(feature_vectors)
 
         return labels, model
@@ -314,16 +371,18 @@ def predict(feature_vectors, model):
     return labels
 
 
-def calculate_distances(feature_vectors, model):
+def calculate_distances(feature_vectors, model, cluster_centers):
 
-    # distances_to_centers = model.transform(feature_vectors)
-    distances_to_centers = euclidean_distances(feature_vectors, model.cluster_centers_)
+    print("======================")
+    print(feature_vectors.shape)
+    print(cluster_centers.shape)
+    distances_to_centers = euclidean_distances(feature_vectors, cluster_centers)
     sum_distance_to_centers = distances_to_centers.sum(axis=1)
 
     return distances_to_centers, sum_distance_to_centers
 
 
-def generate_cluster_names(model):
+def generate_cluster_names(model, cluster_centers):
     """Generate cluster names based on the characteristics of each cluster.
 
     Args:
@@ -334,29 +393,19 @@ def generate_cluster_names(model):
 
     """
 
-    num_clusters = model.cluster_centers_.shape[0]
     levels = ["lowest", "low", "medium", "high", "highest"]
     cluster_names = []
+    n_clusters = cluster_centers.shape[0]
 
-    print(COLORS)
-
-    for i in range(num_clusters):
-        # cluster_names.append(str(i) + ": ")
+    for i in range(n_clusters):
         cluster_names.append(f"{i} ({COLORS[i]}): ")
 
-    maxs = model.cluster_centers_.argmax(axis=0)
-    mins = model.cluster_centers_.argmin(axis=0)
+    maxs = cluster_centers.argmax(axis=0)
+    mins = cluster_centers.argmin(axis=0)
 
     for i in range(len(FEATURE_NAMES)):
-        # cluster_names[maxs[i]] += "_highest_" + FEATURE_NAMES[i]
-        # cluster_names[mins[i]] += "_lowest_" + FEATURE_NAMES[i]
         cluster_names[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
         cluster_names[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
-
-    # if any(c == "" for c in cluster_names):
-    #     for i in range(len(FEATURE_NAMES)):
-    #         cluster_names[maxs[i]] += "highest_" + FEATURE_NAMES[i] + "_"
-    #         cluster_names[mins[i]] += "lowest_" + FEATURE_NAMES[i] + "_"
 
     cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
 
@@ -449,8 +498,18 @@ def create_event_log(segments):
 
     return event_log
 
+def filter_segments(labels, min_segment_length, distances_to_centers=None):
 
-def filter_segments(labels, distances_to_centers, min_segment_length):
+    if distances_to_centers is not None:
+        _filter_segments_with_center_distance(labels, min_segment_length,
+                distances_to_centers)
+    else:
+        _filter_segments(labels, min_segment_length)
+
+def _filter_segments(labels, min_segment_length):
+    pass
+
+def _filter_segments_with_center_distance(labels, min_segment_length, distances_to_centers):
 
     # Array for storing updated labels after short segments are filtered out.
     new_labels = labels.copy()
@@ -463,8 +522,8 @@ def filter_segments(labels, distances_to_centers, min_segment_length):
     number_of_segments = len(segments)
 
     # Filter out the segments which are too short
-    # for i in range(len(segments)):
     while shortest_segment < min_segment_length:
+
         # Get the information of current segment
         current_segment = segments_sorted_on_length[0]
         segment_idx = current_segment[0]

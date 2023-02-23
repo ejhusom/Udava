@@ -33,6 +33,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
             results should be saved to file for more efficient reruns of the
             pipeline. When running the virtual sensor, there is no need to save
             these intermediate results to file.
+        inference_df (DataFrame): A data frame to run inference.
 
     """
 
@@ -47,10 +48,12 @@ def featurize(dir_path="", inference=False, inference_df=None):
     timestamp_column = params["featurize"]["timestamp_column"]
     convert_timestamp_to_datetime = params["featurize"]["convert_timestamp_to_datetime"]
 
+    # If the timestamp column does not have a name, we use the default name
+    # given to unnamed columns by Pandas.
     if timestamp_column == "":
         timestamp_column = "Unnamed: 0"
 
-    # If no name of data set is given, all files present in 'assets/data/raw'
+    # If no name of data set is given, all csv-files present in 'assets/data/raw'
     # will be used.
     if dataset != None:
         dir_path += "/" + dataset
@@ -94,8 +97,6 @@ def featurize(dir_path="", inference=False, inference_df=None):
                 except:
                     pass
 
-            # timestamps = np.concatenate([timestamps, df.index])
-
             featurized_df = _featurize(
                 df, columns, window_size, overlap, timestamp_column
             )
@@ -129,7 +130,20 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
 
 def _featurize(df, columns, window_size, overlap, timestamp_column):
-    """Process individual DataFrames."""
+    """Process individual dataframes.
+
+    Args:
+        df (DataFrame): Dataframe to create features from.
+        columns (list): Which features/columns to create features from.
+        window_size (int): Size of window/subsequences.
+        overlap (int): Overlap between windows.
+        timestamp_column (str): Name of timestamp column.
+
+    Returns:
+        df (DataFrame): Dataframe with features created from original
+            dataframe.
+
+    """
 
     # If no features are specified, use all columns as features
     if type(columns) is str:
@@ -153,9 +167,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
     )
 
     df = pd.DataFrame(features, index=feature_vector_timestamps)
-    # index=feature_vector_timestamps[-len(features):])
 
-    # return features, feature_vector_timestamps
     return df
 
 

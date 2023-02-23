@@ -16,6 +16,7 @@ import sys
 import joblib
 import numpy as np
 import pandas as pd
+import scipy as sp
 import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -60,6 +61,8 @@ class ClusterModel:
         check_ok = True
 
         for path in self.assets_files:
+            print("===========")
+            print(path)
             if not os.path.exists(path):
                 print(f"File {path} not found.")
                 check_ok = False
@@ -89,16 +92,23 @@ class ClusterModel:
         feature_vectors = featurized_df.to_numpy()
         input_scaler = joblib.load(INPUT_SCALER_PATH)
         feature_vectors = input_scaler.transform(feature_vectors)
+        cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
+                index_col=0)
 
         model = joblib.load(MODELS_FILE_PATH)
-        labels = model.predict(feature_vectors)
+
+        if learning_method == "dbscan":
+            labels = self.dbscan_predict(model, feature_vectors)
+        else:
+            labels = model.predict(feature_vectors)
+
         distance_to_centers, sum_distance_to_centers = calculate_distances(
-            feature_vectors, model
+            feature_vectors, model, cluster_centers
         )
 
-        # plt.figure()
-        # plt.plot(labels)
-        # plt.show()
+        plt.figure()
+        plt.plot(labels)
+        plt.show()
 
         if plot_results:
             # visualize_clusters(labels, feature_vectors, model)
@@ -109,3 +119,24 @@ class ClusterModel:
             return fig_div
         else:
             return feature_vector_timestamps, labels, sum_distance_to_centers
+
+    def dbscan_predict(self, model, feature_vectors, metric=sp.spatial.distance.cosine):
+        """Predict labels for cluster models without native method for
+        assigning labels to new data points.
+
+        Inspiration: https://stackoverflow.com/questions/27822752/scikit-learn-predicting-new-points-with-dbscan
+
+        """
+        # Labels are noise by default
+        labels = np.ones(shape=len(feature_vectors), dtype=int) * -1
+
+        # Iterate through all input vectors
+        for i, f in enumerate(feature_vectors):
+            # Find a core sample closer than eps
+            for j, core_sample in enumerate(model.components_):
+                if metric(f, core_sample) < model.eps:
+                    # Assign label of x_core to f
+                    labels[i] = model.labels_[model.core_sample_indices_[j]]
+                    break
+
+        return labels
