@@ -17,34 +17,56 @@
 
         <div class="box createForm">
             <h3>Create new model</h3>
-            <p>A virtual sensor can be created by (A) filling out the form below, or (B) uploading a parameter file.</p>
+            <p>A virtual sensor can be created by (A) uploading a parameter file, or (B) filling out a form.</p>
             <form action="create_model" method="POST" enctype="multipart/form-data">
-                <h4>(A) Fill in the parameters below:</h4>
+            <form action="create_model" method="POST" enctype="multipart/form-data">
+                <h4>(A) Upload parameter file here:</h4>
+                <input type="file" name="file"/>
+                <input type="submit" onclick="loading()"/>
+            </form>
+                <h4>(B) Fill in the parameters below:</h4>
+
                 <label for="dataset">Name of dataset:</label>
                 <input type="text" name="dataset"/>
                 <label for="target">Variable:</label>
                 <input type="text" name="target"/>
                 <label for="timestamp_column">Name of timestamp column:</label>
                 <input type="text" name="timestamp_column"/>
-                <label for="learning_method">Learning method:</label>
-                <select name="learning_method">
-                    <option value="minibatchkmeans" selected>K-means (mini-batch)</option>
-                    <option value="meanshift">Mean shift</option>
-                </select>
-                <label for="n_clusters">Number of clusters:</label>
-                <input type="text" name="n_clusters" />
-                <label for="max_iter">Max iterations of clustering:</label>
-                <input type="text" name="max_iter" value=100 />
+
                 <label for="window_size">Window size:</label>
                 <input type="text" name="window_size" />
                 <label for="overlap">Overlap of windows:</label>
                 <input type="text" name="overlap" value=0 />
 
-                <input type="submit" onclick="loading()"/>
-            </form>
-            <form action="create_model" method="POST" enctype="multipart/form-data">
-                <h4>(B) Upload parameter file here:</h4>
-                <input type="file" name="file"/>
+                <label for="learning_method">Learning method:</label>
+                <select name="learning_method" id="learning_method">
+                    <option value="minibatchkmeans" selected>K-means (mini-batch)</option>
+                    <option value="meanshift">Mean shift</option>
+                    <option value="affinitypropagation">Affinity propagation</option>
+                    <option value="dbscan">DBSCAN</option>
+                </select>
+
+                <label for="n_clusters">Number of clusters:</label>
+                <input type="text" name="n_clusters" />
+
+                <label for="max_iter">Max iterations of clustering:</label>
+                <input type="text" name="max_iter" value=100 />
+
+                <label for="annotations_dir">Name of annotations directory:</label>
+                <input type="text" name="annotations_dir" id="annotations_dir"/>
+
+                <p>
+                    <input class="inline-element" type="checkbox" name="use_predefined_centroids" id="use_predefined_centroids" value=0>
+                    <label class="inline-element" for="use_predefined_centroids">Use predefined centroids</label>
+                </p>
+
+                <input class="inline-element" type="checkbox" name="fix_predefined_centroids" id="fix_predefined_centroids" value=0>
+                <label class="inline-element" for="fix_predefined_centroids">Fix predefined centroids</label>
+                <br>
+
+                <label for="min_segment_length">Minimum segment length:</label>
+                <input type="text" name="min_segment_length" />
+
                 <input type="submit" onclick="loading()"/>
             </form>
             <div id=loaderContainer>
@@ -59,21 +81,46 @@
         </footer>
     </body>
 
+    <!-- TODO: Clean up this unholy JavaScript mess. -->
     <script>
-        function loading(){
-            document.getElementById("loader").style.display = "block";
-            document.getElementById("loaderText").style.display = "block";
-        }
-
-        var slider = document.getElementById("train_split");
-        var output = document.getElementById("train_split_value");
-        output.innerHTML = slider.value / 10;
-
-        slider.oninput = function() {
-            output.innerHTML = this.value / 10;
-        }
+        /*
+        var learningMethod = document.getElementById('learning_method');
+        var annotationsDir = document.getElementById('annotations_dir');
+        var fixCentroids = document.getElementById('fix_predefined_centroids');
+        learningMethod.onchange = function() {
+            if (learningMethod.value == "minibatchkmeans" || learningMethod.value == "meanshift") {
+                annotationsDir.disabled = "";
+            } else {
+                annotationsDir.disabled = "disabled";
+            }
+        };
+        window.onload = function() {
+            if (learningMethod.value == "minibatchkmeans" || learningMethod.value == "meanshift") {
+                annotationsDir.disabled = "";
+            } else {
+                annotationsDir.disabled = "disabled";
+            }
+        };
+        */
     </script>
 
+    <script>
+        /*
+        var learningMethod = document.getElementById('learning_method');
+        var fixCentroids = document.getElementById('fix_predefined_centroids');
+        var annotationsDir = document.getElementById('annotations_dir');
+        annotationsDir.onchange = function() {
+            if (annotationsDir.value.length > 0 && (learningMethod.value == "minibatchkmeans" || learningMethod.value == "meanshift")) {
+                fixCentroids.disabled = "";
+            }
+        };
+        learningMethod.onchange = function() {
+            if (annotationsDir.value.length > 0 && (learningMethod.value == "minibatchkmeans" || learningMethod.value == "meanshift")) {
+                fixCentroids.disabled = "";
+            }
+        };
+        */
+    </script>
 </html>
 
 

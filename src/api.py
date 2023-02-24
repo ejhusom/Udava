@@ -115,14 +115,25 @@ class CreateModel(Resource):
             params = yaml.safe_load(open("params_default.yaml"))
             params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
-            params["featurize"]["overlap"] = int(flask.request.form["overlap"])
             params["featurize"]["timestamp_column"] = flask.request.form[
                 "timestamp_column"
             ]
             params["featurize"]["window_size"] = int(flask.request.form["window_size"])
+            params["featurize"]["overlap"] = int(flask.request.form["overlap"])
             params["cluster"]["learning_method"] = flask.request.form["learning_method"]
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
+            params["cluster"]["annotations_dir"] = flask.request.form["annotations_dir"]
+            params["cluster"]["min_segment_length"] = int(flask.request.form["min_segment_length"])
+
+            params["featurize"]["convert_timestamp_to_datetime"] = True
+            params["cluster"]["use_predefined_centroids"] = False
+            params["cluster"]["fix_predefined_centroids"] = False
+
+            if flask.request.form.get("use_predefined_centroids"):
+                params["cluster"]["use_predefined_centroids"] = True
+                if flask.request.form.get("fix_predefined_centroids"):
+                    params["cluster"]["fix_predefined_centroids"] = True
 
         # Save params to be used by DVC when creating virtual sensor.
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)

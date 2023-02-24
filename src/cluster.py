@@ -168,7 +168,7 @@ def cluster(dir_path=""):
     # filter the segments.
     if min_segment_length > 0:
         distances_to_centers, sum_distance_to_centers = calculate_distances(
-            feature_vectors, model
+            feature_vectors, model, cluster_centers
         )
         labels = filter_segments(labels, min_segment_length,
                 distances_to_centers)
@@ -533,17 +533,6 @@ def create_event_log(segments):
     return event_log
 
 def filter_segments(labels, min_segment_length, distances_to_centers=None):
-
-    if distances_to_centers is not None:
-        _filter_segments_with_center_distance(labels, min_segment_length,
-                distances_to_centers)
-    else:
-        _filter_segments(labels, min_segment_length)
-
-def _filter_segments(labels, min_segment_length):
-    pass
-
-def _filter_segments_with_center_distance(labels, min_segment_length, distances_to_centers):
 
     # Array for storing updated labels after short segments are filtered out.
     new_labels = labels.copy()
