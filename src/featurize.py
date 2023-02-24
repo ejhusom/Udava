@@ -12,6 +12,7 @@ import json
 import os
 import sys
 
+import pycatch22
 import joblib
 import numpy as np
 import pandas as pd
@@ -193,24 +194,26 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
 
     """
 
-    n_features = df.shape[1]
+    n_features = 24
+    n_input_columns = df.shape[1]
     n_rows_raw = df.shape[0]
     n_rows = n_rows_raw // window_size
 
     step = window_size - overlap
 
-    # Initialize descriptive feature matrices
-    mean = np.zeros((n_rows, n_features))
-    median = np.zeros((n_rows, n_features))
-    std = np.zeros((n_rows, n_features))
-    # rms = np.zeros((n_rows, n_features))
-    var = np.zeros((n_rows, n_features))
-    minmax = np.zeros((n_rows, n_features))
-    frequency = np.zeros((n_rows, n_features))
-    gradient = np.zeros((n_rows, n_features))
     feature_vector_timestamps = []
 
-    # cfp = np.zeros((n_rows - 1, 22, n_features))
+    # Initialize descriptive feature matrices
+    mean = np.zeros((n_rows, n_input_columns))
+    median = np.zeros((n_rows, n_input_columns))
+    std = np.zeros((n_rows, n_input_columns))
+    # rms = np.zeros((n_rows, n_input_columns))
+    var = np.zeros((n_rows, n_input_columns))
+    minmax = np.zeros((n_rows, n_input_columns))
+    frequency = np.zeros((n_rows, n_input_columns))
+    gradient = np.zeros((n_rows, n_input_columns))
+
+    features = np.zeros((n_rows, n_features, n_input_columns))
 
     # Loop through all observations and calculate features within window
     for i in range(n_rows):
@@ -220,6 +223,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
         window = np.array(df.iloc[start:stop, :])
         feature_vector_timestamps.append(timestamps[stop - (step // 2)])
 
+        """
         mean[i, :] = np.mean(window, axis=0)
         median[i, :] = np.median(window, axis=0)
         std[i, :] = np.std(window, axis=0)
@@ -228,20 +232,19 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
         minmax[i, :] = np.max((window), axis=0) - np.min((window), axis=0)
         frequency[i, :] = np.linalg.norm(np.fft.rfft(window, axis=0), axis=0, ord=2)
         gradient[i, :] = np.mean(np.gradient(window, axis=0))
+        """
 
-        # for j in range(n_features):
-        #     cfp[i, :, j] = catch22_all(window)["values"]
+        for j in range(n_input_columns):
+            features[i, :, j] = pycatch22.catch22_all(window, catch24=True)["values"]
 
+    """
     features = np.concatenate(
         (mean, median, std, var, minmax, frequency, gradient), axis=1
     )
-    # cfp = np.nan_to_num(cfp)
+    """
 
-    # features = cfp.reshape(n_rows - 1, 22*n_features)
-
-    # print(f"Mean shape: {mean.shape}")
-    # print(f"cfp shape: {cfp.shape}")
-    # print(f"Features shape: {features.shape}")
+    features = np.nan_to_num(features)
+    features = features.reshape(n_rows, n_features*n_input_columns)
 
     # feature_vector_timestamps = timestamps[::step]
     feature_vector_timestamps = pd.Index(

@@ -1,11 +1,11 @@
 cluster:
   annotations_dir: nova10_p8_10hz_annotations
   fix_predefined_centroids: false
-  learning_method: affinitypropagation
+  learning_method: minibatchkmeans
   max_iter: 100
-  min_segment_length: 0
+  min_segment_length: 4
   n_clusters: 7
-  use_predefined_centroids: false
+  use_predefined_centroids: true
 evaluate: null
 featurize:
   columns: Channel_4_Data
