@@ -4,7 +4,7 @@ cluster:
   learning_method: minibatchkmeans
   max_iter: 100
   min_segment_length: 4
-  n_clusters: 7
+  n_clusters: 5
   use_predefined_centroids: true
 evaluate: null
 featurize:
@@ -13,4 +13,4 @@ featurize:
   dataset: nova10_p8_10hz
   overlap: 0
   timestamp_column: timestamp
-  window_size: 10
+  window_size: 6

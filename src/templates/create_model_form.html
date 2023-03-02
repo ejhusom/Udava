@@ -16,6 +16,10 @@
         {% include "models_overview.html" %}
 
         <div class="box createForm">
+            <div id=loaderContainer>
+                <div id=loader></div>
+                <div id=loaderText>Creating model...</div>
+            </div>
             <h3>Create new model</h3>
             <p>A virtual sensor can be created by (A) uploading a parameter file, or (B) filling out a form.</p>
             <form action="create_model" method="POST" enctype="multipart/form-data">
@@ -69,10 +73,6 @@
 
                 <input type="submit" onclick="loading()"/>
             </form>
-            <div id=loaderContainer>
-                <div id=loader></div>
-                <div id=loaderText>Creating model...</div>
-            </div>
         </div>
 
 
@@ -80,6 +80,21 @@
 
         </footer>
     </body>
+
+    <script>
+        function loading(){
+            document.getElementById("loader").style.display = "block";
+            document.getElementById("loaderText").style.display = "block";
+        }
+
+        var slider = document.getElementById("train_split");
+        var output = document.getElementById("train_split_value");
+        output.innerHTML = slider.value / 10;
+
+        slider.oninput = function() {
+            output.innerHTML = this.value / 10;
+        }
+    </script>
 
     <!-- TODO: Clean up this unholy JavaScript mess. -->
     <script>

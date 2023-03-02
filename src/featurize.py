@@ -16,9 +16,11 @@ import pycatch22
 import joblib
 import numpy as np
 import pandas as pd
+import tsfresh
 import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
 
 from config import *
 from preprocess_utils import find_files, move_column
@@ -171,8 +173,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
 
     return df
 
-
-def create_feature_vectors(df, timestamps, window_size, overlap):
+def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"):
     """Create feature_vectors of time series data.
 
     The feature vector is based on statistical properties.
@@ -194,54 +195,98 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
 
     """
 
-    n_features = 24
     n_input_columns = df.shape[1]
     n_rows_raw = df.shape[0]
     n_rows = n_rows_raw // window_size
-
     step = window_size - overlap
-
     feature_vector_timestamps = []
 
-    # Initialize descriptive feature matrices
-    mean = np.zeros((n_rows, n_input_columns))
-    median = np.zeros((n_rows, n_input_columns))
-    std = np.zeros((n_rows, n_input_columns))
-    # rms = np.zeros((n_rows, n_input_columns))
-    var = np.zeros((n_rows, n_input_columns))
-    minmax = np.zeros((n_rows, n_input_columns))
-    frequency = np.zeros((n_rows, n_input_columns))
-    gradient = np.zeros((n_rows, n_input_columns))
 
-    features = np.zeros((n_rows, n_features, n_input_columns))
+    if mode == "catch22":
+        n_features = 24
+        features = np.zeros((n_rows, n_features, n_input_columns))
 
-    # Loop through all observations and calculate features within window
-    for i in range(n_rows):
-        start = i * step
-        stop = start + window_size
+        # Loop through all observations and calculate features within window
+        for i in range(n_rows):
+            start = i * step
+            stop = start + window_size
 
-        window = np.array(df.iloc[start:stop, :])
-        feature_vector_timestamps.append(timestamps[stop - (step // 2)])
+            window = np.array(df.iloc[start:stop, :])
+            feature_vector_timestamps.append(timestamps[stop - (step // 2)])
 
-        """
-        mean[i, :] = np.mean(window, axis=0)
-        median[i, :] = np.median(window, axis=0)
-        std[i, :] = np.std(window, axis=0)
-        # rms[i, :] = np.sqrt(np.mean(np.square(window, axis=0)))
-        var[i, :] = np.var(window, axis=0)
-        minmax[i, :] = np.max((window), axis=0) - np.min((window), axis=0)
-        frequency[i, :] = np.linalg.norm(np.fft.rfft(window, axis=0), axis=0, ord=2)
-        gradient[i, :] = np.mean(np.gradient(window, axis=0))
-        """
+            for j in range(n_input_columns):
+                features[i, :, j] = pycatch22.catch22_all(window, catch24=True)["values"]
 
-        for j in range(n_input_columns):
-            features[i, :, j] = pycatch22.catch22_all(window, catch24=True)["values"]
+    elif mode == "tsfresh":
+        features = []
 
-    """
-    features = np.concatenate(
-        (mean, median, std, var, minmax, frequency, gradient), axis=1
-    )
-    """
+        # Loop through all observations and calculate features within window
+        for i in range(n_rows):
+            start = i * step
+            stop = start + window_size
+
+            window = df.iloc[start:stop, :].copy()
+            # tsfresh requires an ID column. Calculates features on data points
+            # with the same ID, which is why we put the same ID on all rows of
+            # the window.
+            window["id"] = 0
+
+            feature_vector_timestamps.append(timestamps[stop - (step // 2)])
+
+            for j in range(n_input_columns):
+                # features[i, :, j] = tsfresh.extract_features(window, column_id="id")
+                extracted_features = tsfresh.extract_features(window,
+                        column_id="id", disable_progressbar=True)
+                extracted_features = np.array(extracted_features).flatten()
+                # print(extracted_features)
+                # print(extracted_features.shape)
+                features.append(np.array(extracted_features))
+
+        print("======= Extracted features ==========")
+        extracted_features = tsfresh.extract_features(window,
+                column_id="id", disable_progressbar=True)
+        print(extracted_features.columns)
+        extracted_features.to_csv("yo.csv")
+        return 0
+        n_features = len(features[-1])
+        features = np.array(features)
+        print(features)
+        print(features.shape)
+        print("-----------------------------")
+        # print(extracted_features.info())
+    else:
+        n_features = 7
+
+        # Initialize descriptive feature matrices
+        mean = np.zeros((n_rows, n_input_columns))
+        median = np.zeros((n_rows, n_input_columns))
+        std = np.zeros((n_rows, n_input_columns))
+        # rms = np.zeros((n_rows, n_input_columns))
+        var = np.zeros((n_rows, n_input_columns))
+        minmax = np.zeros((n_rows, n_input_columns))
+        frequency = np.zeros((n_rows, n_input_columns))
+        gradient = np.zeros((n_rows, n_input_columns))
+
+        # Loop through all observations and calculate features within window
+        for i in range(n_rows):
+            start = i * step
+            stop = start + window_size
+
+            window = np.array(df.iloc[start:stop, :])
+            feature_vector_timestamps.append(timestamps[stop - (step // 2)])
+
+            mean[i, :] = np.mean(window, axis=0)
+            median[i, :] = np.median(window, axis=0)
+            std[i, :] = np.std(window, axis=0)
+            # rms[i, :] = np.sqrt(np.mean(np.square(window, axis=0)))
+            var[i, :] = np.var(window, axis=0)
+            minmax[i, :] = np.max((window), axis=0) - np.min((window), axis=0)
+            frequency[i, :] = np.linalg.norm(np.fft.rfft(window, axis=0), axis=0, ord=2)
+            gradient[i, :] = np.mean(np.gradient(window, axis=0))
+
+        features = np.concatenate(
+            (mean, median, std, var, minmax, frequency, gradient), axis=1
+        )
 
     features = np.nan_to_num(features)
     features = features.reshape(n_rows, n_features*n_input_columns)
@@ -252,7 +297,6 @@ def create_feature_vectors(df, timestamps, window_size, overlap):
     )
 
     return features, feature_vector_timestamps
-
 
 if __name__ == "__main__":
 
