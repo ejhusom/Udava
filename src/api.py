@@ -28,7 +28,7 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from clustermodel import ClusterModel
-from config import API_MODELS_PATH, METRICS_FILE_PATH
+from config import API_MODELS_PATH, METRICS_FILE_PATH, DATA_PATH_RAW
 from udava import Udava
 
 app = flask.Flask(__name__)
@@ -105,7 +105,7 @@ class CreateModel(Resource):
 
         try:
             # Read params file
-            params_file = flask.request.files["file"]
+            params_file = flask.request.files["parameter_file"]
             params = yaml.safe_load(params_file)
             print("Reading params-file")
             # flask.session["params"] = params
@@ -113,7 +113,7 @@ class CreateModel(Resource):
         except:
             print("Reading parameters from HTML form")
             params = yaml.safe_load(open("params_default.yaml"))
-            params["featurize"]["dataset"] = flask.request.form["dataset"]
+            # params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
             params["featurize"]["timestamp_column"] = flask.request.form[
                 "timestamp_column"
@@ -135,6 +135,23 @@ class CreateModel(Resource):
                 if flask.request.form.get("fix_predefined_centroids"):
                     params["cluster"]["fix_predefined_centroids"] = True
 
+        # NB: Currently override the use of annotations, since it is not
+        # supported fully in the API.
+        params["cluster"]["use_predefined_centroids"] = False
+        params["cluster"]["fix_predefined_centroids"] = False
+
+        # The ID of the model is given an UUID.
+        model_id = str(uuid.uuid4())
+        params["featurize"]["dataset"] = model_id
+
+        # Create directory to host data
+        data_path = DATA_PATH_RAW / model_id
+        data_path.mkdir(parents=True, exist_ok=True)
+
+        # Save data file
+        data_file = flask.request.files["data_file"]
+        data_file.save(os.path.join(data_path, data_file.filename))
+
         # Save params to be used by DVC when creating virtual sensor.
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
@@ -148,8 +165,6 @@ class CreateModel(Resource):
 
         # Create dict containing all metadata about model
         model_metadata = {}
-        # The ID of the model is given an UUID.
-        model_id = str(uuid.uuid4())
         model_metadata["id"] = model_id
         model_metadata["params"] = params
 

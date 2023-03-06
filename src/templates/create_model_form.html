@@ -23,15 +23,19 @@
             <h3>Create new model</h3>
             <p>A virtual sensor can be created by (A) uploading a parameter file, or (B) filling out a form.</p>
             <form action="create_model" method="POST" enctype="multipart/form-data">
-            <form action="create_model" method="POST" enctype="multipart/form-data">
-                <h4>(A) Upload parameter file here:</h4>
-                <input type="file" name="file"/>
+                <h4>Data (csv):</h4>
+                <input type="file" name="data_file"/>
+                <h4>Parameter file</h4>
+                <input type="file" name="parameter_file"/>
                 <input type="submit" onclick="loading()"/>
             </form>
-                <h4>(B) Fill in the parameters below:</h4>
-
-                <label for="dataset">Name of dataset:</label>
-                <input type="text" name="dataset"/>
+            <hr>
+            <form action="create_model" method="POST" enctype="multipart/form-data">
+                <h4>Alternatively, fill in the parameters below:</h4>
+                <h4>Data (csv):</h4>
+                <input type="file" name="data_file"/>
+                <!-- <label for="dataset">Name of dataset:</label> -->
+                <!-- <input type="text" name="dataset"/> -->
                 <label for="target">Variable:</label>
                 <input type="text" name="target"/>
                 <label for="timestamp_column">Name of timestamp column:</label>

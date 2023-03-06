@@ -16,7 +16,7 @@ import pycatch22
 import joblib
 import numpy as np
 import pandas as pd
-import tsfresh
+# import tsfresh
 import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -217,43 +217,43 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
             for j in range(n_input_columns):
                 features[i, :, j] = pycatch22.catch22_all(window, catch24=True)["values"]
 
-    elif mode == "tsfresh":
-        features = []
+    # elif mode == "tsfresh":
+    #     features = []
 
-        # Loop through all observations and calculate features within window
-        for i in range(n_rows):
-            start = i * step
-            stop = start + window_size
+    #     # Loop through all observations and calculate features within window
+    #     for i in range(n_rows):
+    #         start = i * step
+    #         stop = start + window_size
 
-            window = df.iloc[start:stop, :].copy()
-            # tsfresh requires an ID column. Calculates features on data points
-            # with the same ID, which is why we put the same ID on all rows of
-            # the window.
-            window["id"] = 0
+    #         window = df.iloc[start:stop, :].copy()
+    #         # tsfresh requires an ID column. Calculates features on data points
+    #         # with the same ID, which is why we put the same ID on all rows of
+    #         # the window.
+    #         window["id"] = 0
 
-            feature_vector_timestamps.append(timestamps[stop - (step // 2)])
+    #         feature_vector_timestamps.append(timestamps[stop - (step // 2)])
 
-            for j in range(n_input_columns):
-                # features[i, :, j] = tsfresh.extract_features(window, column_id="id")
-                extracted_features = tsfresh.extract_features(window,
-                        column_id="id", disable_progressbar=True)
-                extracted_features = np.array(extracted_features).flatten()
-                # print(extracted_features)
-                # print(extracted_features.shape)
-                features.append(np.array(extracted_features))
+    #         for j in range(n_input_columns):
+    #             # features[i, :, j] = tsfresh.extract_features(window, column_id="id")
+    #             extracted_features = tsfresh.extract_features(window,
+    #                     column_id="id", disable_progressbar=True)
+    #             extracted_features = np.array(extracted_features).flatten()
+    #             # print(extracted_features)
+    #             # print(extracted_features.shape)
+    #             features.append(np.array(extracted_features))
 
-        print("======= Extracted features ==========")
-        extracted_features = tsfresh.extract_features(window,
-                column_id="id", disable_progressbar=True)
-        print(extracted_features.columns)
-        extracted_features.to_csv("yo.csv")
-        return 0
-        n_features = len(features[-1])
-        features = np.array(features)
-        print(features)
-        print(features.shape)
-        print("-----------------------------")
-        # print(extracted_features.info())
+    #     print("======= Extracted features ==========")
+    #     extracted_features = tsfresh.extract_features(window,
+    #             column_id="id", disable_progressbar=True)
+    #     print(extracted_features.columns)
+    #     extracted_features.to_csv("yo.csv")
+    #     return 0
+    #     n_features = len(features[-1])
+    #     features = np.array(features)
+    #     print(features)
+    #     print(features.shape)
+    #     print("-----------------------------")
+    #     # print(extracted_features.info())
     else:
         n_features = 7
 
