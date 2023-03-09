@@ -135,7 +135,7 @@ class CreateModel(Resource):
                 if flask.request.form.get("fix_predefined_centroids"):
                     params["cluster"]["fix_predefined_centroids"] = True
 
-        # NB: Currently override the use of annotations, since it is not
+        # TODO: Currently override the use of annotations, since it is not
         # supported fully in the API.
         params["cluster"]["use_predefined_centroids"] = False
         params["cluster"]["fix_predefined_centroids"] = False

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Evaluate result from clustering.
+"""Postprocess result of training cluster model.
 
 Author:
     Erik Johannes Husom
@@ -12,6 +12,7 @@ Created:
 
 
 import joblib
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -35,6 +36,8 @@ from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from config import *
+from cluster_utils import filter_segments, create_event_log, calculate_model_metrics, calculate_distances, find_segments
+from preprocess_utils import find_files
 
 
 def filter_outliers(labels, distances, percentile=95, separate_thresholds=False):
@@ -315,18 +318,106 @@ def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, mod
 
     return dist, avg_dist
 
+def generate_cluster_names(model, cluster_centers):
+    """Generate cluster names based on the characteristics of each cluster.
+
+    Args:
+        model: Cluster model trained on input data.
+
+    Returns:
+        cluster_names (list of str): Names based on feature characteristics.
+
+    """
+
+    levels = ["lowest", "low", "medium", "high", "highest"]
+    cluster_names = []
+    n_clusters = cluster_centers.shape[0]
+
+    for i in range(n_clusters):
+        cluster_names.append(f"{i} ({COLORS[i]}): ")
+
+    maxs = cluster_centers.argmax(axis=0)
+    mins = cluster_centers.argmin(axis=0)
+
+    for i in range(len(FEATURE_NAMES)):
+        cluster_names[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
+        cluster_names[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
+
+    cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
+
+    return cluster_names
+
+
+def postprocess(model, cluster_centers, feature_vectors, labels):
+
+    with open("params.yaml", "r") as params_file:
+        params = yaml.safe_load(params_file)
+
+    learning_method = params["cluster"]["learning_method"]
+    n_clusters = params["cluster"]["n_clusters"]
+    max_iter = params["cluster"]["max_iter"]
+    use_predefined_centroids = params["cluster"]["use_predefined_centroids"]
+    fix_predefined_centroids = params["cluster"]["fix_predefined_centroids"]
+    annotations_dir = params["cluster"]["annotations_dir"]
+    min_segment_length = params["postprocess"]["min_segment_length"]
+
+    # If the minimum segment length is set to be a non-zero value, we need to
+    # filter the segments.
+    if min_segment_length > 0:
+        distances_to_centers, sum_distance_to_centers = calculate_distances(
+            feature_vectors, model, cluster_centers
+        )
+        labels = filter_segments(labels, min_segment_length, distances_to_centers)
+
+    # Create event log
+    event_log = create_event_log(
+            labels, 
+            identifier=params["featurize"]["dataset"]
+    )
+
+    event_log.to_csv(OUTPUT_PATH / "event_log.csv")
+
+    # Create and save cluster names
+    cluster_names = generate_cluster_names(model, cluster_centers)
+
+    # Use cluster names from annotated data, if the number of clusters still
+    # matches the number of unique annotation label (the number of clusters
+    # might change when using cluster algorithms that automatically decide on a
+    # suitable number of clusters.
+    if use_predefined_centroids:
+        if len(predefined_centroids_dict) == n_clusters:
+            for i, key in enumerate(predefined_centroids_dict):
+                cluster_names["cluster_name"][i] = (
+                    str(cluster_names["cluster_name"][i].split(":")[0])
+                    + ": "
+                    + f" {key}, ".upper()
+                    + str(cluster_names["cluster_name"][i].split(":")[1])
+                )
+
+    cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
+
+    METRICS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    metrics = calculate_model_metrics(model, feature_vectors, labels)
+
+    with open(METRICS_FILE_PATH, "w") as f:
+        json.dump(metrics, f)
 
 if __name__ == "__main__":
 
-    labels = pd.read_csv(OUTPUT_PATH / "labels.csv").iloc[:, -1].to_numpy()
-    original_data = pd.read_csv(OUTPUT_PATH / "combined.csv", index_col=0)
-    feature_vectors = np.load(DATA_FEATURIZED_PATH / "featurized.npy")
-    feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
+    labels = pd.read_csv(LABELS_PATH).iloc[:, -1].to_numpy()
+    original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
+    feature_vectors = np.load(FEATURE_VECTORS_PATH)
+    feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
+    cluster_centers = pd.read_csv(CLUSTER_CENTERS_PATH,
+            index_col=0).to_numpy()
     model = joblib.load(MODELS_FILE_PATH)
+
+    postprocess(model, cluster_centers, feature_vectors, labels)
 
     visualize_clusters(
         labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False
     )
+
     plot_labels_over_time(
         feature_vector_timestamps,
         labels,

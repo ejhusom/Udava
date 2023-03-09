@@ -21,11 +21,12 @@ import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from cluster import *
+from train import *
 from config import *
 from evaluate import *
 from featurize import *
 from preprocess_utils import find_files, move_column
+from cluster_utils import calculate_distances
 
 
 class ClusterModel:
@@ -105,6 +106,21 @@ class ClusterModel:
         distance_to_centers, sum_distance_to_centers = calculate_distances(
             feature_vectors, model, cluster_centers
         )
+
+        # If the minimum segment length is set to be a non-zero value, we need to
+        # filter the segments.
+        if params["postprocess"]["min_segment_length"] > 0:
+            distances_to_centers, sum_distance_to_centers = calculate_distances(
+                feature_vectors, model, cluster_centers
+            )
+            labels = filter_segments(labels, min_segment_length, distances_to_centers)
+
+        # Create event log
+        event_log = create_event_log(
+                labels, 
+                identifier=params["featurize"]["dataset"]
+        )
+        event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
         plt.figure()
         plt.plot(labels)

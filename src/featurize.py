@@ -122,14 +122,14 @@ def featurize(dir_path="", inference=False, inference_df=None):
 
         # Save the timestamps for each feature_vector, in order to use it for
         # plotting later.
-        np.save(OUTPUT_PATH / "feature_vector_timestamps.npy", fp_timestamps)
+        np.save(FEATURE_VECTOR_TIMESTAMPS_PATH, fp_timestamps)
 
         scaler = StandardScaler()
         scaled = scaler.fit_transform(combined_featurized_df.to_numpy())
         joblib.dump(scaler, INPUT_SCALER_PATH)
 
-        combined_df.to_csv(OUTPUT_PATH / "combined.csv")
-        np.save(DATA_FEATURIZED_PATH / "featurized.npy", scaled)
+        combined_df.to_csv(ORIGINAL_TIME_SERIES_PATH)
+        np.save(FEATURE_VECTORS_PATH, scaled)
 
 
 def _featurize(df, columns, window_size, overlap, timestamp_column):

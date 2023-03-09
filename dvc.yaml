@@ -3,13 +3,13 @@ stages:
     featurize:
         cmd: python3 src/featurize.py assets/data/raw/
         deps:
-            - assets/data/raw
+            - assets/data/raw 
             - src/featurize.py
             - src/config.py
         outs:
             - assets/data/featurized
             - assets/output/feature_vector_timestamps.npy
-            - assets/output/combined.csv
+            - assets/output/original_data.csv
         params:
             - featurize.columns
             - featurize.dataset
@@ -18,18 +18,15 @@ stages:
             - featurize.convert_timestamp_to_datetime
             - featurize.window_size
 
-    cluster:
-        cmd: python3 src/cluster.py assets/data/featurized/
+    train:
+        cmd: python3 src/train.py assets/data/featurized/
         deps:
             - assets/data/featurized
             - assets/data/annotations
-            - src/cluster.py
+            - src/train.py
             - src/config.py
         outs:
             - assets/output/labels.csv
-            - assets/output/event_log.csv
-            - assets/output/feature_vectors.csv
-            - assets/output/cluster_names.csv
             - assets/models
         params:
             - cluster.learning_method
@@ -38,20 +35,24 @@ stages:
             - cluster.use_predefined_centroids
             - cluster.fix_predefined_centroids
             - cluster.annotations_dir
-            - cluster.min_segment_length
-        metrics:
-        - assets/metrics/metrics.json
 
-    evaluate:
-        cmd: python3 src/evaluate.py
+    postprocess:
+        cmd: python3 src/postprocess.py
         deps:
             - assets/data/featurized
             - assets/models/model.pkl
             - assets/output/labels.csv
             - assets/output/feature_vector_timestamps.npy
-            - assets/output/combined.csv
-            - src/evaluate.py
+            - assets/output/original_data.csv
+            - src/postprocess.py
             - src/config.py
         outs:
             - assets/plots/clusters.png
             - assets/plots/labels_over_time.html
+            - assets/output/cluster_names.csv
+            - assets/output/event_log.csv
+        params:
+            - cluster.use_predefined_centroids
+            - postprocess.min_segment_length
+        metrics:
+            - assets/metrics/metrics.json

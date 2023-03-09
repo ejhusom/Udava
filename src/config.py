@@ -44,6 +44,9 @@ DATA_PATH_RAW = DATA_PATH / "raw"
 DATA_FEATURIZED_PATH = DATA_PATH / "featurized"
 """Path to data that is has added features."""
 
+FEATURE_VECTORS_PATH = DATA_FEATURIZED_PATH / "featurized.npy"
+"""Path to feature vectors of data set."""
+
 DATA_SCALED_PATH = DATA_PATH / "scaled"
 """Path to scaled data."""
 
@@ -69,6 +72,18 @@ OUTPUT_PATH = ASSETS_PATH / "output"
 
 PREDEFINED_CENTROIDS_PATH = OUTPUT_PATH / "predefined_centroids.json"
 """Path to file containing predefined centroids."""
+
+LABELS_PATH = OUTPUT_PATH / "labels.csv"
+"""Path to file containing cluster labels."""
+
+CLUSTER_CENTERS_PATH = OUTPUT_PATH / "cluster_centers.csv"
+"""Path to file containing the cluster centers/centroids of the model."""
+
+FEATURE_VECTOR_TIMESTAMPS_PATH = OUTPUT_PATH / "feature_vector_timestamps.npy"
+"""Path to file containing the timestamps of the feature vectors."""
+
+ORIGINAL_TIME_SERIES_PATH = OUTPUT_PATH / "original_data.csv"
+"""Path to file containing the original input itme series combined into one file."""
 
 PREDICTIONS_PATH = ASSETS_PATH / "predictions"
 """Path to folder containing predictions file."""

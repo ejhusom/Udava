@@ -3,14 +3,14 @@ cluster:
   fix_predefined_centroids: false
   learning_method: minibatchkmeans
   max_iter: 100
-  min_segment_length: 4
   n_clusters: 7
   use_predefined_centroids: false
-evaluate: null
 featurize:
   columns: Channel_4_Data
   convert_timestamp_to_datetime: true
-  dataset: 4a7c73db-f7ee-4ab4-974e-9ae7440021a1
+  dataset: nova10_p8_10hz
   overlap: 0
   timestamp_column: timestamp
   window_size: 6
+postprocess:
+  min_segment_length: 4
