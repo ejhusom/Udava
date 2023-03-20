@@ -46,13 +46,10 @@ def create_model_form():
 
     models = get_models()
 
-    # params = flask.session.get("params", None)
-
     return flask.render_template(
         "create_model_form.html",
         length=len(models),
         models=models
-        # params=params
     )
 
 
@@ -170,9 +167,6 @@ class CreateModel(Resource):
 
         metrics = json.load(open(METRICS_FILE_PATH))
         model_metadata["metrics"] = metrics
-        # try:
-        # except:
-        #     model_metadata["metrics"] = {}
 
         # Read cluster characteristics
         cluster_characteristics = pd.read_csv("assets/output/cluster_names.csv")
@@ -181,13 +175,14 @@ class CreateModel(Resource):
             c for c in cluster_characteristics.iloc[:, 1]
         ]
 
+        # Try to load existing models. If no models exists, create an empty
+        # dict.
         try:
             models = json.load(open(API_MODELS_PATH))
         except:
             models = {}
 
         models[model_id] = model_metadata
-        print(models)
 
         json.dump(models, open(API_MODELS_PATH, "w+"))
 

@@ -230,7 +230,7 @@ def find_segments(labels):
 
 def create_event_log(labels, identifier=""):
 
-    if identifier="":
+    if identifier == "":
         identifier = str(uuid.uuid4())
 
     segments = find_segments(labels)

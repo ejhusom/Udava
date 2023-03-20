@@ -23,7 +23,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from train import *
 from config import *
-from evaluate import *
+from postprocess import *
 from featurize import *
 from preprocess_utils import find_files, move_column
 from cluster_utils import calculate_distances
