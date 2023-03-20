@@ -275,7 +275,6 @@ class Infer(Resource):
     def post(self):
 
         input_json = flask.request.get_json()
-        print(input_json)
         model_id = str(input_json["param"]["modeluid"])
 
         inference_df = pd.DataFrame(
