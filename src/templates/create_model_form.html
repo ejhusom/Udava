@@ -25,9 +25,20 @@
             <form action="create_model" method="POST" enctype="multipart/form-data">
                 <h4>Data (csv):</h4>
                 <input type="file" name="data_file"/>
+
                 <h4>Parameter file</h4>
                 <input type="file" name="parameter_file"/>
+
+                <h4>To use semi-supervised learning, upload both an annotations file and the annotated data:</h4>
+
+                <h5>Annotations file</h5>
+                <input type="file" name="annotations_file"/>
+
+                <h5>Annotated data</h5>
+                <input type="file" name="annotated_data_file"/>
+
                 <input type="submit" onclick="loading()"/>
+
             </form>
             <hr>
             <form action="create_model" method="POST" enctype="multipart/form-data">

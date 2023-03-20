@@ -104,7 +104,10 @@ class CreateModel(Resource):
             # Read params file
             params_file = flask.request.files["parameter_file"]
             params = yaml.safe_load(params_file)
-            print("Reading params-file")
+
+            annotations_file = flask.request.files["annotations_file"]
+            annotated_data = flask.request.files["annotated_data_file"]
+
             # flask.session["params"] = params
             # flask.redirect("create_model_form")
         except:
@@ -153,7 +156,7 @@ class CreateModel(Resource):
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
         # Run DVC to create virtual sensor.
-        subprocess.run(["dvc", "repro", "cluster"], check=True)
+        subprocess.run(["dvc", "repro", "train"], check=True)
 
         # Reread params-file, in case it is changed during pipeline execution
         # (e.g., the number of clusters).
@@ -235,7 +238,7 @@ class InferGUI(Resource):
         cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
-        subprocess.run(["dvc", "repro", "cluster"], check=True)
+        subprocess.run(["dvc", "repro", "train"], check=True)
 
         if flask.request.form.get("plot"):
             fig_div = cm.run_cluster_model(inference_df=inference_df, plot_results=True)
@@ -287,7 +290,7 @@ class Infer(Resource):
         cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
-        subprocess.run(["dvc", "repro", "cluster"], check=True)
+        subprocess.run(["dvc", "repro", "train"], check=True)
 
         timestamps, labels, distance_metric = cm.run_cluster_model(
             inference_df=inference_df
