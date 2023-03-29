@@ -21,12 +21,12 @@ import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from train import *
-from config import *
-from postprocess import *
-from featurize import *
-from preprocess_utils import find_files, move_column
 from cluster_utils import calculate_distances
+from config import *
+from featurize import *
+from postprocess import *
+from preprocess_utils import find_files, move_column
+from train import *
 
 
 class ClusterModel:
@@ -93,8 +93,7 @@ class ClusterModel:
         feature_vectors = featurized_df.to_numpy()
         input_scaler = joblib.load(INPUT_SCALER_PATH)
         feature_vectors = input_scaler.transform(feature_vectors)
-        cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
-                index_col=0)
+        cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv", index_col=0)
 
         model = joblib.load(MODELS_FILE_PATH)
 
@@ -116,10 +115,7 @@ class ClusterModel:
             labels = filter_segments(labels, min_segment_length, distances_to_centers)
 
         # Create event log
-        event_log = create_event_log(
-                labels, 
-                identifier=params["featurize"]["dataset"]
-        )
+        event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
         event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
         plt.figure()

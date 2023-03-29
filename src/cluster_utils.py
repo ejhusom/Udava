@@ -11,7 +11,6 @@ Created:
 """
 import numpy as np
 import pandas as pd
-
 from sklearn.metrics import (
     calinski_harabasz_score,
     davies_bouldin_score,
@@ -20,6 +19,7 @@ from sklearn.metrics import (
 )
 
 from config import *
+
 
 def filter_segments(labels, min_segment_length, distances_to_centers=None):
 
@@ -128,6 +128,7 @@ def create_event_log_from_segments(segments):
     event_log = pd.DataFrame(events, columns=["timestamp", "label", "status"])
 
     return event_log
+
 
 def calculate_model_metrics(model, feature_vectors, labels):
     """Evaluate the cluster model.
@@ -239,14 +240,15 @@ def create_event_log(labels, identifier=""):
 
     return event_log
 
+
 def post_process_labels(
-        model,
-        cluster_centers,
-        feature_vectors,
-        labels,
-        identifier,
-        min_segment_length=0,
-    ):
+    model,
+    cluster_centers,
+    feature_vectors,
+    labels,
+    identifier,
+    min_segment_length=0,
+):
 
     if min_segment_length > 0:
         distances_to_centers, sum_distance_to_centers = calculate_distances(

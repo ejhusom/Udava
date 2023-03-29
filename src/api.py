@@ -28,7 +28,7 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from clustermodel import ClusterModel
-from config import API_MODELS_PATH, METRICS_FILE_PATH, DATA_PATH_RAW
+from config import API_MODELS_PATH, DATA_PATH_RAW, METRICS_FILE_PATH
 from udava import Udava
 
 app = flask.Flask(__name__)
@@ -47,9 +47,7 @@ def create_model_form():
     models = get_models()
 
     return flask.render_template(
-        "create_model_form.html",
-        length=len(models),
-        models=models
+        "create_model_form.html", length=len(models), models=models
     )
 
 
@@ -124,7 +122,9 @@ class CreateModel(Resource):
             params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
             params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
             params["cluster"]["annotations_dir"] = flask.request.form["annotations_dir"]
-            params["cluster"]["min_segment_length"] = int(flask.request.form["min_segment_length"])
+            params["cluster"]["min_segment_length"] = int(
+                flask.request.form["min_segment_length"]
+            )
 
             params["featurize"]["convert_timestamp_to_datetime"] = True
             params["cluster"]["use_predefined_centroids"] = False

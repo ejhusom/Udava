@@ -9,9 +9,9 @@ Created:
     2021-11-29 Monday 12:05:02
 
 """
+import json
 import sys
 
-import json
 import numpy as np
 import pandas as pd
 import yaml
@@ -213,15 +213,15 @@ def fit_predict(feature_vectors, model):
 
 
 def fit_predict_with_predefined_centroids(
-        feature_vectors,
-        model,
-        learning_method,
-        n_clusters,
-        predefined_centroids_dict,
-        fix_predefined_centroids=False,
-        max_iter=100,
-    ): 
-    """Fit a model with fixe cluster centroids.  
+    feature_vectors,
+    model,
+    learning_method,
+    n_clusters,
+    predefined_centroids_dict,
+    fix_predefined_centroids=False,
+    max_iter=100,
+):
+    """Fit a model with fixe cluster centroids.
 
     Args:
         predefined_centroids_dict (dict): A dictionary containing predefined
@@ -330,7 +330,7 @@ def fit_predict_with_predefined_centroids(
         return labels, model
 
 
-def predict(feature_vectors, model): 
+def predict(feature_vectors, model):
     labels = model.predict(feature_vectors)
 
     return labels

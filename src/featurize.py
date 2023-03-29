@@ -12,15 +12,15 @@ import json
 import os
 import sys
 
-import pycatch22
 import joblib
 import numpy as np
 import pandas as pd
+import pycatch22
+
 # import tsfresh
 import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-
 
 from config import *
 from preprocess_utils import find_files, move_column
@@ -173,6 +173,7 @@ def _featurize(df, columns, window_size, overlap, timestamp_column):
 
     return df
 
+
 def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"):
     """Create feature_vectors of time series data.
 
@@ -201,7 +202,6 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
     step = window_size - overlap
     feature_vector_timestamps = []
 
-
     if mode == "catch22":
         n_features = 24
         features = np.zeros((n_rows, n_features, n_input_columns))
@@ -215,7 +215,9 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
             feature_vector_timestamps.append(timestamps[stop - (step // 2)])
 
             for j in range(n_input_columns):
-                features[i, :, j] = pycatch22.catch22_all(window, catch24=True)["values"]
+                features[i, :, j] = pycatch22.catch22_all(window, catch24=True)[
+                    "values"
+                ]
 
     # elif mode == "tsfresh":
     #     features = []
@@ -289,7 +291,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
         )
 
     features = np.nan_to_num(features)
-    features = features.reshape(n_rows, n_features*n_input_columns)
+    features = features.reshape(n_rows, n_features * n_input_columns)
 
     # feature_vector_timestamps = timestamps[::step]
     feature_vector_timestamps = pd.Index(
@@ -297,6 +299,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
     )
 
     return features, feature_vector_timestamps
+
 
 if __name__ == "__main__":
 

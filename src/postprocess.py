@@ -11,8 +11,9 @@ Created:
 """
 
 
-import joblib
 import json
+
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -35,8 +36,14 @@ from sklearn.metrics import euclidean_distances
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
+from cluster_utils import (
+    calculate_distances,
+    calculate_model_metrics,
+    create_event_log,
+    filter_segments,
+    find_segments,
+)
 from config import *
-from cluster_utils import filter_segments, create_event_log, calculate_model_metrics, calculate_distances, find_segments
 from preprocess_utils import find_files
 
 
@@ -100,8 +107,9 @@ def visualize_clusters(
     """
 
     clusters = np.unique(labels)
-    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
-            index_col=0).to_numpy()
+    cluster_centers = pd.read_csv(
+        OUTPUT_PATH / "cluster_centers.csv", index_col=0
+    ).to_numpy()
 
     if mark_outliers:
         # dist = model.transform(feature_vectors)
@@ -118,13 +126,18 @@ def visualize_clusters(
                 current_cluster_points[:, dim1],
                 current_cluster_points[:, dim2],
                 color=COLORS[c],
-                label=f"Cluster {c}"
+                label=f"Cluster {c}",
             )
 
             if label_data_points:
                 for i in range(current_cluster_points.shape[0]):
-                    plt.annotate(c, (current_cluster_points[i, dim1],
-                        current_cluster_points[i, dim2]))
+                    plt.annotate(
+                        c,
+                        (
+                            current_cluster_points[i, dim1],
+                            current_cluster_points[i, dim2],
+                        ),
+                    )
 
         if mark_outliers:
             current_cluster_indeces = np.where(labels == -1)
@@ -146,8 +159,7 @@ def visualize_clusters(
             )
 
             if label_data_points:
-                plt.annotate(c, (cluster_centers[i, dim1],
-                    cluster_centers[i, dim2]))
+                plt.annotate(c, (cluster_centers[i, dim1], cluster_centers[i, dim2]))
 
         plt.legend()
 
@@ -190,8 +202,9 @@ def plot_labels_over_time(
     overlap = params["featurize"]["overlap"]
     columns = params["featurize"]["columns"]
 
-    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
-            index_col=0).to_numpy()
+    cluster_centers = pd.read_csv(
+        OUTPUT_PATH / "cluster_centers.csv", index_col=0
+    ).to_numpy()
 
     if type(columns) is str:
         columns = [columns]
@@ -301,8 +314,9 @@ def plot_labels_over_time(
 
 def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
 
-    cluster_centers = pd.read_csv(OUTPUT_PATH / "cluster_centers.csv",
-            index_col=0).to_numpy()
+    cluster_centers = pd.read_csv(
+        OUTPUT_PATH / "cluster_centers.csv", index_col=0
+    ).to_numpy()
 
     # dist = model.transform(feature_vectors)
     dist = euclidean_distances(feature_vectors, cluster_centers)
@@ -317,6 +331,7 @@ def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, mod
     plt.show()
 
     return dist, avg_dist
+
 
 def generate_cluster_names(model, cluster_centers):
     """Generate cluster names based on the characteristics of each cluster.
@@ -370,10 +385,7 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
         labels = filter_segments(labels, min_segment_length, distances_to_centers)
 
     # Create event log
-    event_log = create_event_log(
-            labels, 
-            identifier=params["featurize"]["dataset"]
-    )
+    event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
 
     event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
@@ -402,14 +414,14 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     with open(METRICS_FILE_PATH, "w") as f:
         json.dump(metrics, f)
 
+
 if __name__ == "__main__":
 
     labels = pd.read_csv(LABELS_PATH).iloc[:, -1].to_numpy()
     original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
     feature_vectors = np.load(FEATURE_VECTORS_PATH)
     feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
-    cluster_centers = pd.read_csv(CLUSTER_CENTERS_PATH,
-            index_col=0).to_numpy()
+    cluster_centers = pd.read_csv(CLUSTER_CENTERS_PATH, index_col=0).to_numpy()
     model = joblib.load(MODELS_FILE_PATH)
 
     postprocess(model, cluster_centers, feature_vectors, labels)
