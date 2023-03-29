@@ -8,9 +8,14 @@ Author:
 Created:
     2023-03-08 onsdag 09:09:52 
 
+Description:
+    This module contains functions for clustering and post-processing of
+    clustering results.
+
 """
 import numpy as np
 import pandas as pd
+
 from sklearn.metrics import (
     calinski_harabasz_score,
     davies_bouldin_score,
@@ -20,8 +25,24 @@ from sklearn.metrics import (
 
 from config import *
 
-
 def filter_segments(labels, min_segment_length, distances_to_centers=None):
+    """Filter out segments which are too short.
+
+    This function filters out segments which are too short. If the segment is
+    too short, it will be merged with the neighboring segment. If the segment
+    is too short, and the neighboring segments have different labels, the
+    segment will be split in half, and each half will be "swallowed" by the
+    neighboring segments.
+
+    Args:
+        labels (np.array): Array of labels.
+        min_segment_length (int): Minimum length of a segment.
+        distances_to_centers (np.array): Array of distances to cluster centers.
+
+    Returns:
+        np.array: Array of updated labels.
+
+    """
 
     # Array for storing updated labels after short segments are filtered out.
     new_labels = labels.copy()
@@ -111,6 +132,15 @@ def filter_segments(labels, min_segment_length, distances_to_centers=None):
 
 
 def create_event_log_from_segments(segments):
+    """Create an event log from segments.
+
+    Args:
+        segments (np.array): Array of segments.
+
+    Returns:
+        pd.DataFrame: Event log.
+
+    """
 
     events = []
     feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
@@ -129,7 +159,6 @@ def create_event_log_from_segments(segments):
 
     return event_log
 
-
 def calculate_model_metrics(model, feature_vectors, labels):
     """Evaluate the cluster model.
 
@@ -138,6 +167,14 @@ def calculate_model_metrics(model, feature_vectors, labels):
     Calinski-Harabasz Index: Higher when clusters are dense and well separated.
     Davies-Bouldin Index: Zero is the lowest score. Lower scores indicate a
         better partition.
+
+    Args:
+        model (sklearn.cluster): Cluster model.
+        feature_vectors (np.array): Feature vectors.
+        labels (np.array): Cluster labels.
+
+    Returns:
+        dict: Dictionary with the model metrics.
 
     """
 
@@ -230,6 +267,21 @@ def find_segments(labels):
 
 
 def create_event_log(labels, identifier=""):
+    """Create an event log from labels.
+
+    This function creates an event log from an array of labels. The event log
+    has the following format:
+
+    timestamp, label, status
+
+    Args:
+        labels (np.array): Array of labels.
+        identifier (str): Case identifier.
+
+    Returns:
+        pd.DataFrame: Event log.
+
+    """
 
     if identifier == "":
         identifier = str(uuid.uuid4())
@@ -240,15 +292,31 @@ def create_event_log(labels, identifier=""):
 
     return event_log
 
-
 def post_process_labels(
-    model,
-    cluster_centers,
-    feature_vectors,
-    labels,
-    identifier,
-    min_segment_length=0,
-):
+        model,
+        cluster_centers,
+        feature_vectors,
+        labels,
+        identifier,
+        min_segment_length=0,
+    ):
+    """Post-process labels.
+
+    This function post-processes the labels by filtering out segments that are
+    too short. It also creates an event log from the labels.
+
+    Args:
+        model (sklearn.cluster): Cluster model.
+        cluster_centers (np.array): Cluster centers.
+        feature_vectors (np.array): Feature vectors.
+        labels (np.array): Cluster labels.
+        identifier (str): Case identifier.
+        min_segment_length (int): Minimum segment length.
+
+    Returns:
+        tuple: Tuple containing: (1) array of labels, (2) event log.
+        
+    """
 
     if min_segment_length > 0:
         distances_to_centers, sum_distance_to_centers = calculate_distances(

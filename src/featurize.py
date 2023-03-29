@@ -7,6 +7,12 @@ Author:
 Date:
     2021-11-29 Monday 11:31:22 
 
+Description:
+    This script creates summary statistics from time series data. The
+    summary statistics are created by sliding a window across the time
+    series data and calculating the summary statistics for each window.
+    The summary statistics are then saved to file.
+
 """
 import json
 import os
@@ -30,6 +36,11 @@ def featurize(dir_path="", inference=False, inference_df=None):
     """Create vectors of summary statistics based on sliding windows across
     time series data.
 
+    This function creates vectors of summary statistics based on sliding
+    windows across time series data. The summary statistics are created by
+    sliding a window across the time series data and calculating the summary
+    statistics for each window. The summary statistics are then saved to file.
+
     Args:
         dir_path (str): Path to directory containing files.
         inference (bool): When creating a virtual sensor, the
@@ -37,6 +48,9 @@ def featurize(dir_path="", inference=False, inference_df=None):
             pipeline. When running the virtual sensor, there is no need to save
             these intermediate results to file.
         inference_df (DataFrame): A data frame to run inference.
+
+    Returns:
+        None
 
     """
 
@@ -135,6 +149,11 @@ def featurize(dir_path="", inference=False, inference_df=None):
 def _featurize(df, columns, window_size, overlap, timestamp_column):
     """Process individual dataframes.
 
+    This function creates vectors of summary statistics based on sliding
+    windows across time series data. The summary statistics are created by
+    sliding a window across the time series data and calculating the summary
+    statistics for each window. The summary statistics are then saved to file.
+
     Args:
         df (DataFrame): Dataframe to create features from.
         columns (list): Which features/columns to create features from.
@@ -187,6 +206,12 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
             a feature_vector.
         overlap (int): How much overlap between windows of the time series
             data.
+        mode (str): The mode to use when creating feature_vectors. The
+            following modes are available:
+            - standard: Create feature_vectors based on statistical properties
+                of the time series data.
+            - catch22: Create feature_vectors based on the catch22 library.
+
 
     Returns:
         feature_vectors (Numpy array): An array of feature_vectors for the time
@@ -302,7 +327,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
 
 
 if __name__ == "__main__":
-
+    # Set random seed for reproducibility
     np.random.seed(2020)
 
     featurize(sys.argv[1])

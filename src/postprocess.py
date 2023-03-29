@@ -48,6 +48,24 @@ from preprocess_utils import find_files
 
 
 def filter_outliers(labels, distances, percentile=95, separate_thresholds=False):
+    """Filter outliers from labels.
+
+    The outliers are defined as data points that are further away from their
+    cluster center than the given percentile.
+
+    Args:
+        labels (np.array): Labels.
+        distances (np.array): Distances from each data point to each cluster
+            center.
+        percentile (int): Percentile to use for outlier detection.
+        separate_thresholds (bool): If True, each cluster will have its own
+            threshold for outlier detection. If False, all clusters will use
+            the same threshold.
+
+    Returns:
+        np.array: Labels with outliers filtered out.
+
+    """
 
     local_distances = np.take_along_axis(
         distances, labels.reshape(len(labels), 1), axis=1
@@ -98,11 +116,22 @@ def visualize_clusters(
     """Plot data point and cluster centers in a reduced feature space.
 
     Args:
+        labels (np.array): Labels.
+        feature_vectors (np.array): Feature vectors.
+        model (sklearn.cluster): Cluster model.
         dim1 (int): Index of first feature to use in plot.
         dim2 (int): Index of second feature to use in plot.
         dim3 (int): Index of third feature to use in plot. If None (which
             is default), the plot will be in 2D. If not None, the plot will
             be in 3D.
+        width (int): Width of plot.
+        height (int): Height of plot.
+        mark_outliers (bool): If True, outliers will be marked with a grey
+            color.
+        label_data_points (bool): If True, data points will be labeled with
+
+    Returns:
+        None.
 
     """
 
@@ -194,6 +223,27 @@ def plot_labels_over_time(
     show_local_distance=False,
     reduce_plot_size=False,
 ):
+    """Plot labels over time.
+
+    This function plots the labels over time. It also plots the local
+    distance of each data point to its cluster center.
+
+    Args:
+        feature_vector_timestamps (np.array): Timestamps of feature vectors.
+        labels (np.array): Labels.
+        feature_vectors (np.array): Feature vectors.
+        original_data (pd.DataFrame): Original data.
+        model (sklearn.cluster): Cluster model.
+        mark_outliers (bool): If True, outliers will be marked with a grey
+            color.
+        show_local_distance (bool): If True, the local distance of each
+            data point to its cluster center will be plotted.
+        reduce_plot_size (bool): If True, the plot will be reduced in size.
+
+    Returns:
+        None.
+
+    """
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -313,6 +363,17 @@ def plot_labels_over_time(
 
 
 def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
+    """Plot the distance of each data point to its cluster center.
+
+    Args:
+        feature_vector_timestamps (np.array): Timestamps of feature vectors.
+        feature_vectors (np.array): Feature vectors.
+        model (sklearn.cluster): Cluster model.
+
+    Returns:
+        None.
+        
+    """
 
     cluster_centers = pd.read_csv(
         OUTPUT_PATH / "cluster_centers.csv", index_col=0
@@ -338,6 +399,7 @@ def generate_cluster_names(model, cluster_centers):
 
     Args:
         model: Cluster model trained on input data.
+        cluster_centers (np.array): Cluster centers.
 
     Returns:
         cluster_names (list of str): Names based on feature characteristics.
@@ -364,6 +426,22 @@ def generate_cluster_names(model, cluster_centers):
 
 
 def postprocess(model, cluster_centers, feature_vectors, labels):
+    """Postprocess the cluster labels.
+
+    This function postprocess the output of the clustering algorithm. It
+    filters out the segments that are too short, and it also merges the
+    segments that are too close to each other.
+
+    Args:
+        model: Cluster model trained on input data.
+        cluster_centers (np.array): Cluster centers.
+        feature_vectors (np.array): Feature vectors.
+        labels (np.array): Cluster labels.
+
+    Returns:
+        labels (np.array): Postprocessed cluster labels.
+
+    """
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -417,6 +495,7 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
 
 if __name__ == "__main__":
 
+    # Load data
     labels = pd.read_csv(LABELS_PATH).iloc[:, -1].to_numpy()
     original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
     feature_vectors = np.load(FEATURE_VECTORS_PATH)
