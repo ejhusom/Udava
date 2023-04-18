@@ -130,7 +130,6 @@ def filter_segments(labels, min_segment_length, distances_to_centers=None):
 
     return new_labels
 
-
 def create_event_log_from_segments(segments):
     """Create an event log from segments.
 
@@ -287,7 +286,7 @@ def create_event_log(labels, identifier=""):
         identifier = str(uuid.uuid4())
 
     segments = find_segments(labels)
-    event_log = create_event_log_from_segments(labels)
+    event_log = create_event_log_from_segments(segments)
     event_log["case"] = identifier
 
     return event_log

@@ -38,11 +38,14 @@ app.config["DEBUG"] = True
 
 @app.route("/")
 def home():
+    """Home page."""
+
     return flask.render_template("index.html")
 
 
 @app.route("/create_model_form")
 def create_model_form():
+    """Create model form."""
 
     models = get_models()
 
@@ -53,6 +56,7 @@ def create_model_form():
 
 @app.route("/inference")
 def inference():
+    """Inference page."""
 
     models = get_models()
 
@@ -61,6 +65,7 @@ def inference():
 
 @app.route("/inference_result")
 def inference_result():
+    """Inference result page."""
 
     models = get_models()
 
@@ -69,15 +74,28 @@ def inference_result():
 
 @app.route("/result")
 def result(plot_div):
+    """Result page."""
+
     return flask.render_template("result.html", plot=flask.Markup(plot_div))
 
 
 @app.route("/prediction")
 def prediction():
+    """Prediction page."""
+
     return flask.render_template("prediction.html")
 
 
 def get_models():
+    """Get models.
+
+    This function reads the API_MODELS_PATH file and returns a dictionary
+    containing all models.
+
+    Returns:
+        models (dict): Dictionary containing all models.
+
+    """
 
     try:
         models = json.load(open(API_MODELS_PATH))
@@ -88,7 +106,18 @@ def get_models():
 
 
 class CreateModel(Resource):
+    """Create model."""
+
     def get(self):
+        """Get models.
+
+        This function reads the API_MODELS_PATH file and returns a dictionary
+        containing all models.
+
+        Returns:
+            models (dict): Dictionary containing all models.
+
+        """
 
         try:
             models = json.load(open(API_MODELS_PATH))
@@ -97,9 +126,18 @@ class CreateModel(Resource):
             return {"message": "No models exist."}, 401
 
     def post(self):
+        """Create model.
 
+        This function creates a model based on the parameters provided in the
+        request body.
+
+        Returns:
+            model_id (str): The ID of the created model.
+
+        """
+
+        # Read parameters from request body (JSON).
         try:
-            # Read params file
             params_file = flask.request.files["parameter_file"]
             params = yaml.safe_load(params_file)
 
@@ -193,10 +231,20 @@ class CreateModel(Resource):
 
 
 class InferDemo(Resource):
+    """Infer demo."""
+
     def get(self):
         return 200
 
     def post(self):
+        """Infer demo.
+
+        This function runs inference on a demo dataset.
+
+        Returns:
+            200
+
+        """
 
         # model_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
@@ -221,10 +269,20 @@ class InferDemo(Resource):
 
 
 class InferGUI(Resource):
+    """Infer GUI."""
+
     def get(self):
         return 200
 
     def post(self):
+        """Infer GUI.
+
+        This function runs inference on a dataset uploaded by the user.
+
+        Returns:
+            200
+
+        """
 
         model_id = flask.request.form["id"]
         csv_file = flask.request.files["file"]
@@ -267,10 +325,21 @@ class InferGUI(Resource):
 
 
 class Infer(Resource):
+    """Infer."""
+
     def get(self):
         return 200
 
     def post(self):
+        """Infer.
+
+        This function runs inference on a dataset uploaded by the user through
+        the API.
+
+        Returns:
+            200
+
+        """
 
         input_json = flask.request.get_json()
         model_id = str(input_json["param"]["modeluid"])

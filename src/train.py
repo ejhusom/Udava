@@ -15,7 +15,7 @@ import sys
 import numpy as np
 import pandas as pd
 import yaml
-from joblib import dump
+import joblib
 from sklearn.cluster import (
     DBSCAN,
     OPTICS,
@@ -181,7 +181,7 @@ def train(dir_path=""):
     # Save output to disk
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     MODELS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    dump(model, MODELS_FILE_PATH)
+    joblib.dump(model, MODELS_FILE_PATH)
     pd.DataFrame(labels).to_csv(LABELS_PATH)
     pd.DataFrame(cluster_centers).to_csv(CLUSTER_CENTERS_PATH)
 
