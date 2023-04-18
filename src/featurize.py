@@ -282,14 +282,14 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
     #     print("-----------------------------")
     #     # print(extracted_features.info())
     else:
-        n_features = 7
+        n_features = 6
 
         # Initialize descriptive feature matrices
         mean = np.zeros((n_rows, n_input_columns))
         median = np.zeros((n_rows, n_input_columns))
         std = np.zeros((n_rows, n_input_columns))
         # rms = np.zeros((n_rows, n_input_columns))
-        var = np.zeros((n_rows, n_input_columns))
+        # var = np.zeros((n_rows, n_input_columns))
         minmax = np.zeros((n_rows, n_input_columns))
         frequency = np.zeros((n_rows, n_input_columns))
         gradient = np.zeros((n_rows, n_input_columns))
@@ -306,13 +306,14 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
             median[i, :] = np.median(window, axis=0)
             std[i, :] = np.std(window, axis=0)
             # rms[i, :] = np.sqrt(np.mean(np.square(window, axis=0)))
-            var[i, :] = np.var(window, axis=0)
+            # var[i, :] = np.var(window, axis=0)
             minmax[i, :] = np.max((window), axis=0) - np.min((window), axis=0)
             frequency[i, :] = np.linalg.norm(np.fft.rfft(window, axis=0), axis=0, ord=2)
             gradient[i, :] = np.mean(np.gradient(window, axis=0))
 
         features = np.concatenate(
-            (mean, median, std, var, minmax, frequency, gradient), axis=1
+            (mean, median, std, minmax, frequency, gradient), axis=1
+            # (mean, median, std, var, minmax, frequency, gradient), axis=1
         )
 
     features = np.nan_to_num(features)

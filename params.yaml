@@ -1,16 +1,16 @@
 cluster:
-  annotations_dir: nova10_p8_10hz_annotations
+  annotations_dir: null
   fix_predefined_centroids: false
   learning_method: minibatchkmeans
   max_iter: 100
   n_clusters: 7
   use_predefined_centroids: false
 featurize:
-  columns: Channel_4_Data
+  columns: power
   convert_timestamp_to_datetime: true
-  dataset: nova10_p8_10hz
+  dataset: rip_restructured_merged
   overlap: 0
-  timestamp_column: timestamp
-  window_size: 6
+  timestamp_column: date
+  window_size: 10
 postprocess:
   min_segment_length: 4
