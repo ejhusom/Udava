@@ -18,18 +18,14 @@ import yaml
 import joblib
 from sklearn.cluster import (
     DBSCAN,
-    OPTICS,
     AffinityPropagation,
-    AgglomerativeClustering,
-    Birch,
-    KMeans,
     MeanShift,
     MiniBatchKMeans,
 )
 
 from annotations import *
 from config import *
-from preprocess_utils import find_files, move_column
+from preprocess_utils import find_files
 
 
 def train(dir_path=""):
@@ -245,7 +241,6 @@ def fit_predict_with_predefined_centroids(
 
     """
 
-    n_predefined_centroids = len(predefined_centroids_dict)
     predefined_centroids = []
 
     # Get predefined centroids from dictionary to array.
