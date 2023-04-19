@@ -103,7 +103,8 @@ INPUT_SCALER_PATH = SCALER_PATH / "input_scaler.z"
 OUTPUT_SCALER_PATH = SCALER_PATH / "output_scaler.z"
 """Path to output scaler."""
 
-FEATURE_NAMES = ["mean", "median", "std", "var", "minmax", "frequency", "gradient"]
+# FEATURE_NAMES = ["mean", "median", "std", "var", "minmax", "frequency", "gradient"]
+FEATURE_NAMES = ["mean", "median", "std", "minmax", "frequency", "gradient"]
 
 COLORS = [
     "red",
