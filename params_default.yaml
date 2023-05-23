@@ -6,7 +6,7 @@ featurize:
     columns:
         - variable
 
-cluster:
+train:
     learning_method: minibatchkmeans
     n_clusters: 4
     max_iter: 100
@@ -16,3 +16,6 @@ cluster:
 
 postprocess:
     min_segment_length: 10
+
+explain:
+  dataset_description: The dataset containes power measurements.

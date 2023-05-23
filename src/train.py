@@ -46,12 +46,12 @@ def train(dir_path=""):
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
-    learning_method = params["cluster"]["learning_method"]
-    n_clusters = params["cluster"]["n_clusters"]
-    max_iter = params["cluster"]["max_iter"]
-    use_predefined_centroids = params["cluster"]["use_predefined_centroids"]
-    fix_predefined_centroids = params["cluster"]["fix_predefined_centroids"]
-    annotations_dir = params["cluster"]["annotations_dir"]
+    learning_method = params["train"]["learning_method"]
+    n_clusters = params["train"]["n_clusters"]
+    max_iter = params["train"]["max_iter"]
+    use_predefined_centroids = params["train"]["use_predefined_centroids"]
+    fix_predefined_centroids = params["train"]["fix_predefined_centroids"]
+    annotations_dir = params["train"]["annotations_dir"]
 
     # Find data files and load feature_vectors.
     filepaths = find_files(dir_path, file_extension=".npy")
@@ -116,7 +116,7 @@ def train(dir_path=""):
     #     unique_labels = unique_labels[1:]
 
     n_clusters = len(unique_labels)
-    params["cluster"]["n_clusters"] = n_clusters
+    params["train"]["n_clusters"] = n_clusters
 
     # TODO: Not sure if it is a good idea to rewrite params.yaml during
     # execution of the pipeline.

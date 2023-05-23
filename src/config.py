@@ -105,6 +105,7 @@ OUTPUT_SCALER_PATH = SCALER_PATH / "output_scaler.z"
 
 # FEATURE_NAMES = ["mean", "median", "std", "var", "minmax", "frequency", "gradient"]
 FEATURE_NAMES = ["mean", "median", "std", "minmax", "frequency", "gradient"]
+# FEATURE_NAMES = ["mean", "median", "std", "frequency", "gradient"]
 
 COLORS = [
     "red",

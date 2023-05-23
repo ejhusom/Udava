@@ -29,12 +29,12 @@ stages:
             - assets/output/labels.csv
             - assets/models
         params:
-            - cluster.learning_method
-            - cluster.max_iter
-            - cluster.n_clusters
-            - cluster.use_predefined_centroids
-            - cluster.fix_predefined_centroids
-            - cluster.annotations_dir
+            - train.learning_method
+            - train.max_iter
+            - train.n_clusters
+            - train.use_predefined_centroids
+            - train.fix_predefined_centroids
+            - train.annotations_dir
 
     postprocess:
         cmd: python3 src/postprocess.py
@@ -52,7 +52,15 @@ stages:
             - assets/output/cluster_names.csv
             - assets/output/event_log.csv
         params:
-            - cluster.use_predefined_centroids
+            - train.use_predefined_centroids
             - postprocess.min_segment_length
         metrics:
             - assets/metrics/metrics.json
+
+    # llm:
+    #     cmd: python3 src/explain.py
+    #     deps:
+    #         - src/llm.py
+    #         - assets/output/cluster_names.csv
+    #     params:
+    #         - llm.dataset_description

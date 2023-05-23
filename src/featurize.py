@@ -313,6 +313,7 @@ def create_feature_vectors(df, timestamps, window_size, overlap, mode="standard"
 
         features = np.concatenate(
             (mean, median, std, minmax, frequency, gradient), axis=1
+            # (mean, median, std, frequency, gradient), axis=1
             # (mean, median, std, var, minmax, frequency, gradient), axis=1
         )
 

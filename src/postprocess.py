@@ -13,6 +13,7 @@ Created:
 
 import json
 
+from datetime import timedelta
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -446,12 +447,12 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
-    learning_method = params["cluster"]["learning_method"]
-    n_clusters = params["cluster"]["n_clusters"]
-    max_iter = params["cluster"]["max_iter"]
-    use_predefined_centroids = params["cluster"]["use_predefined_centroids"]
-    fix_predefined_centroids = params["cluster"]["fix_predefined_centroids"]
-    annotations_dir = params["cluster"]["annotations_dir"]
+    learning_method = params["train"]["learning_method"]
+    n_clusters = params["train"]["n_clusters"]
+    max_iter = params["train"]["max_iter"]
+    use_predefined_centroids = params["train"]["use_predefined_centroids"]
+    fix_predefined_centroids = params["train"]["fix_predefined_centroids"]
+    annotations_dir = params["train"]["annotations_dir"]
     min_segment_length = params["postprocess"]["min_segment_length"]
 
     # If the minimum segment length is set to be a non-zero value, we need to
@@ -465,10 +466,24 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     # Create event log
     event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
 
-    event_log.to_csv(OUTPUT_PATH / "event_log.csv")
+    # Hardcoded expectations (adhoc solution)
+    expectations = [
+            {"label": 3, "name": "ROTATING GRINDING WHEEL", "duration": (0, 10)},
+            {"label": 4, "name": "ROTATING GRINDING WHEEL + COOLANT", "duration": (2, 9)},
+            {"label": 5, "name": "ROUGHING", "duration": (2, 10)},
+            {"label": 6, "name": "ROUGHING SPARK OUT", "duration": (0.5, 5)},
+            {"label": 0, "name": "DRESSING OPERATION", "duration": (2, 8)},
+            {"label": 4, "name": "ROTATING GRINDING WHEEL + COOLANT", "duration": (2, 9)},
+            {"label": 1, "name": "FINISHING", "duration": (3, 10)},
+            {"label": 2, "name": "FINISHING SPARK OUT", "duration": (2, 8)},
+    ]
 
     # Create and save cluster names
     cluster_names = generate_cluster_names(model, cluster_centers)
+
+    # Read predefined centroids from file
+    with open(PREDEFINED_CENTROIDS_PATH, "r") as f:
+        predefined_centroids_dict = json.load(f)
 
     # Use cluster names from annotated data, if the number of clusters still
     # matches the number of unique annotation label (the number of clusters
@@ -484,7 +499,17 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
                     + str(cluster_names["cluster_name"][i].split(":")[1])
                 )
 
+                # Add number to expectations
+                for expectation in expectations:
+                    if expectation["name"].lower() == key.lower():
+                        expectation["label"] = i
+
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
+
+    event_log_score(event_log, expectations)
+
+    event_log.to_csv(OUTPUT_PATH / "event_log.csv")
+
 
     METRICS_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
     metrics = calculate_model_metrics(model, feature_vectors, labels)
@@ -492,6 +517,87 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     with open(METRICS_FILE_PATH, "w") as f:
         json.dump(metrics, f)
 
+    return labels
+
+def event_log_score(event_log, expectations):
+    """Iterate through the event log and check whether the events matches the
+    expected order and duration.
+
+    Arguments:
+        event_log ():
+        expectations (list): List of expected events.
+
+    Returns:
+        score
+
+    """
+
+    hits = 0
+    misses = 0
+
+    # print(event_log)
+    print(expectations)
+
+    event_log["duration_correct"] = 0
+    event_log["next_event_correct"] = 0
+
+    # Loop through every second row in dataframe
+    for i, event in event_log.iloc[1::2].iterrows():
+        event_label = event["label"]
+        # Find duration
+        event_duration = event["timestamp"] - event_log.iloc[i - 1]["timestamp"]
+
+        # Find expectations
+        # expected_duration_ranges = []
+        expected_next_events = []
+        for j, expectation in enumerate(expectations):
+            if expectation["label"] == event_label:
+                # expected_duration_ranges.append(expectation["duration"])
+                expected_duration_range = expectation["duration"]
+
+                if j < len(expectations) - 1:
+                    expected_next_events.append(expectations[j + 1]["label"])
+                # If this is the last event in the cycle, the next expected
+                # event is the first in the cycle.
+                else:
+                    expected_next_events.append(expectations[0]["label"])
+
+        # Compare duration
+        # Convert to timedelta
+        min_duration = timedelta(seconds=expected_duration_range[0])
+        max_duration = timedelta(seconds=expected_duration_range[1])
+        if event_duration < min_duration or event_duration > max_duration:
+            print(
+                f"Event {event_label} has duration {event_duration} which is not in the expected range {expected_duration_range} (timestamp: {event['timestamp']})"
+            )
+            misses += 1
+        else:
+            hits += 1
+            event_log["duration_correct"][i] = 1
+
+        # Find next event
+        # If this is the last event in the event log, there is no next event.
+        if i == len(event_log) - 1:
+            continue
+        else:
+            next_event = event_log.iloc[i + 1]
+            next_event_label = next_event["label"]
+
+        if next_event["label"] in expected_next_events:
+            hits += 1
+            event_log["next_event_correct"][i] = 1
+        else:
+            print(
+                f"Event {event_label} has next event {next_event_label} which is not in the expected events {expected_next_events} (timestamp: {event['timestamp']})"
+            )
+            misses += 1
+
+    score = hits / (hits + misses)
+    print(event_log)
+
+    print(f"Score: {score}")
+
+    return score, event_log
 
 if __name__ == "__main__":
 
@@ -503,7 +609,7 @@ if __name__ == "__main__":
     cluster_centers = pd.read_csv(CLUSTER_CENTERS_PATH, index_col=0).to_numpy()
     model = joblib.load(MODELS_FILE_PATH)
 
-    postprocess(model, cluster_centers, feature_vectors, labels)
+    labels = postprocess(model, cluster_centers, feature_vectors, labels)
 
     visualize_clusters(
         labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False
