@@ -9,8 +9,6 @@ Created:
     2021-11-29 Monday 13:40:31
 
 """
-
-
 import json
 
 from datetime import timedelta

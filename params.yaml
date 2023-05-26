@@ -4,7 +4,7 @@ featurize:
   dataset: nova10_p8_10hz
   overlap: 0
   timestamp_column: timestamp
-  window_size: 6
+  window_size: 30
 postprocess:
   min_segment_length: 2
 train:

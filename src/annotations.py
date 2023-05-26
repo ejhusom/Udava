@@ -52,6 +52,8 @@ def read_annotations(filepath, verbose=False):
 
 def create_cluster_centers_from_annotations(data, annotations):
 
+    n_features = len(FEATURE_NAMES)
+
     # Load parameters
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
@@ -60,6 +62,7 @@ def create_cluster_centers_from_annotations(data, annotations):
     columns = params["featurize"]["columns"]
     window_size = params["featurize"]["window_size"]
     overlap = params["featurize"]["overlap"]
+    # overlap = window_size - 1
     timestamp_column = params["featurize"]["timestamp_column"]
 
     # for col in data.columns:
@@ -74,6 +77,7 @@ def create_cluster_centers_from_annotations(data, annotations):
 
     categories = np.unique(annotations["timeserieslabels"])
     cluster_centers = {}
+
 
     for category in categories:
 
@@ -101,14 +105,21 @@ def create_cluster_centers_from_annotations(data, annotations):
         # Combine all the data that is annotated with the same category.
         combined_feature_vectors = np.concatenate(features_list, axis=0)
 
-        # Scale the feature vectors with the scaler already fitted on the full data
-        # set (not only the data used for annotations).
-        scaled_feature_vectors = scaler.transform(combined_feature_vectors)
+        if combined_feature_vectors.size == 0:
+            print("{category} has no features".format(category=category))
 
-        # Take the average of the feature vectors, to find a representative
-        # feature vector for the current category.
-        average_feature_vector = np.average(scaled_feature_vectors, axis=0)
-        cluster_centers[category] = list(average_feature_vector)
+            # If the feature vectors are empty, set cluster center to zero,
+            # with the same length as a feature vector.
+            cluster_centers[category] = [0] * n_features
+        else:
+            # Scale the feature vectors with the scaler already fitted on the full data
+            # set (not only the data used for annotations).
+            scaled_feature_vectors = scaler.transform(combined_feature_vectors)
+
+            # Take the average of the feature vectors, to find a representative
+            # feature vector for the current category.
+            average_feature_vector = np.average(scaled_feature_vectors, axis=0)
+            cluster_centers[category] = list(average_feature_vector)
 
     print(cluster_centers)
     return cluster_centers
