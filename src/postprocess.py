@@ -40,6 +40,7 @@ from cluster_utils import (
     calculate_model_metrics,
     create_event_log,
     filter_segments,
+    filter_segments2,
     find_segments,
 )
 from config import *
@@ -221,6 +222,7 @@ def plot_labels_over_time(
     mark_outliers=False,
     show_local_distance=False,
     reduce_plot_size=False,
+    filename=None,
 ):
     """Plot labels over time.
 
@@ -354,9 +356,12 @@ def plot_labels_over_time(
     fig.update_yaxes(title_text="Deviation metric", secondary_y=True)
     fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
-    fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
-    fig.write_html("src/templates/prediction.html")
-    fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
+    if filename is None:
+        fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
+        fig.write_html("src/templates/prediction.html")
+        fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
+    else:
+        fig.write_html(filename)
 
     return fig.to_html(full_html=False)
 
@@ -459,7 +464,48 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
         distances_to_centers, sum_distance_to_centers = calculate_distances(
             feature_vectors, model, cluster_centers
         )
-        labels = filter_segments(labels, min_segment_length, distances_to_centers)
+        # labels = filter_segments(labels, min_segment_length, distances_to_centers)
+
+        # TESTING #####################################################
+        # Load data
+        original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
+        feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
+        model = joblib.load(MODELS_FILE_PATH)
+
+        labels = filter_segments2(labels, min_segment_length,
+                feature_vector_timestamps, feature_vectors, original_data,
+                model, distances_to_centers)
+
+        # segments = find_segments(labels)
+
+        # segments_sorted_on_length = segments[segments[:, 2].argsort()]
+
+        # shortest_segment = np.min(segments[:, 2])
+        # number_of_segments = len(segments)
+
+        # jup = 0
+        # while True:
+        #     new_labels, _ = _filter_segments(labels, min_segment_length, segments,
+        #             segments_sorted_on_length, distances_to_centers)
+
+        #     if _ == 1:
+        #         break
+        #     else:
+        #         labels = new_labels
+
+        #     if jup % 20 == 0:
+        #         plot_labels_over_time(
+        #             feature_vector_timestamps,
+        #             labels,
+        #             feature_vectors,
+        #             original_data,
+        #             model,
+        #             mark_outliers=False,
+        #             show_local_distance=False,
+        #             filename=f"labels_over_time_{jup}.html"
+        #         )
+        #     jup += 1
+            #################################################################
 
     # Create event log
     event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
@@ -593,7 +639,7 @@ def event_log_score(event_log, expectations):
     score = hits / (hits + misses)
     print(event_log)
 
-    print(f"Score: {score}")
+    print(f"Event log score: {score}")
 
     return score, event_log
 
@@ -624,3 +670,4 @@ if __name__ == "__main__":
     )
 
     # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
+
