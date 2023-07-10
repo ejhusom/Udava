@@ -16,6 +16,10 @@ Description:
 import numpy as np
 import pandas as pd
 
+import yaml
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 from sklearn.metrics import (
     calinski_harabasz_score,
     davies_bouldin_score,
@@ -131,105 +135,7 @@ def filter_segments(labels, min_segment_length, distances_to_centers=None):
 
     return new_labels
 
-def _filter_segments(labels, min_segment_length, segments,
-        segments_sorted_on_length, distances_to_centers=None):
-    """Filter out segments which are too short.
-
-    This function filters out segments which are too short. If the segment is
-    too short, it will be merged with the neighboring segment. If the segment
-    is too short, and the neighboring segments have different labels, the
-    segment will be split in half, and each half will be "swallowed" by the
-    neighboring segments.
-
-    Args:
-        labels (np.array): Array of labels.
-        min_segment_length (int): Minimum length of a segment.
-        distances_to_centers (np.array): Array of distances to cluster centers.
-
-    Returns:
-        np.array: Array of updated labels.
-
-    """
-
-    number_of_segments = len(segments)
-
-    # Array for storing updated labels after short segments are filtered out.
-    new_labels = labels.copy()
-
-
-    # Get the information of current segment
-    current_segment = segments_sorted_on_length[0]
-    segment_idx = current_segment[0]
-    label = current_segment[1]
-    length = current_segment[2]
-    start_idx = current_segment[3]
-    end_idx = current_segment[4]
-
-    if length >= min_segment_length:
-        return new_labels, 1
-
-    current_distances = distances_to_centers[start_idx : end_idx + 1, :]
-
-    # Set the original smallest distance to be above the maximum, in order
-    # to find the second closest cluster center
-    current_distances[:, label] = np.max(current_distances) + 1
-
-    # Find the second closest cluster center of the current data points
-    second_closest_cluster_centers = current_distances.argmin(axis=1)
-
-    # Find the most frequent second closest cluster center in the segment
-    counts = np.bincount(second_closest_cluster_centers)
-    most_frequent_second_closest_cluster_center = np.argmax(counts)
-    current_new_labels = (
-        np.ones_like(second_closest_cluster_centers)
-        * most_frequent_second_closest_cluster_center
-    )
-
-    # Find the neighboring segment labels
-    if segment_idx == 0:
-        # If it is the first segment, then the label of the previous
-        # segment will be set to equal the one for the next segment
-        label_of_previous_segment = segments[segment_idx + 1][1]
-        label_of_next_segment = segments[segment_idx + 1][1]
-    elif segment_idx == len(segments) - 1:
-        # If it is the last segment, then the label of the next
-        # segment will be set to equal the one for the previous segment
-        label_of_previous_segment = segments[segment_idx - 1][1]
-        label_of_next_segment = segments[segment_idx - 1][1]
-    else:
-        label_of_previous_segment = segments[segment_idx - 1][1]
-        label_of_next_segment = segments[segment_idx + 1][1]
-
-    # If the most frequent second closest cluster center in the segment is
-    # different from the previous and next segment, the current segment
-    # will be split in half, and each half will be "swallowed" by the
-    # neighboring segments. Otherwise the label is set to either the
-    # previous or next segment label.
-    if most_frequent_second_closest_cluster_center == label_of_previous_segment:
-        current_new_labels[:] = label_of_previous_segment
-    elif most_frequent_second_closest_cluster_center == label_of_next_segment:
-        current_new_labels[:] = label_of_next_segment
-    else:
-        current_new_labels[: length // 2] = label_of_previous_segment
-        current_new_labels[length // 2 :] = label_of_next_segment
-
-    # Update with new labels
-    new_labels[start_idx : end_idx + 1] = current_new_labels
-
-    # Recompute segments, since they now have changed
-    segments = find_segments(new_labels)
-    segments_sorted_on_length = segments[segments[:, 2].argsort()]
-    shortest_segment = np.min(segments[:, 2])
-
-    if len(segments) == number_of_segments:
-        print("Could not remove any more segments.")
-        return new_labels, 1
-
-    number_of_segments = len(segments)
-
-    return new_labels, 0
-
-def filter_segments2(labels, min_segment_length, feature_vector_timestamps,
+def filter_segments_plot_snapshots(labels, min_segment_length, feature_vector_timestamps,
         feature_vectors, original_data, model, distances_to_centers=None):
     """Filter out segments which are too short.
 
@@ -549,9 +455,6 @@ def post_process_labels(
 
     return labels, event_log
 
-import yaml
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 def plot_labels_over_time(
     feature_vector_timestamps,
     labels,
@@ -679,20 +582,20 @@ def plot_labels_over_time(
             )
 
     # Plot deviation metric
-    # fig.add_trace(
-    #     go.Scatter(
-    #         # x=timestamps[::step],
-    #         x=feature_vector_timestamps,
-    #         y=sum_dist,
-    #         name="Deviation metric",
-    #         line=dict(color="black"),
-    #     ),
-    #     secondary_y=True,
-    # )
+    fig.add_trace(
+        go.Scatter(
+            # x=timestamps[::step],
+            x=feature_vector_timestamps,
+            y=sum_dist,
+            name="Deviation metric",
+            line=dict(color="black"),
+        ),
+        secondary_y=True,
+    )
 
     fig.update_layout(title_text="Cluster labels over time")
     fig.update_xaxes(title_text="date")
-    # fig.update_yaxes(title_text="Deviation metric", secondary_y=True)
+    fig.update_yaxes(title_text="Deviation metric", secondary_y=True)
     fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
     if filename is None:

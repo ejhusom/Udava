@@ -40,8 +40,9 @@ from cluster_utils import (
     calculate_model_metrics,
     create_event_log,
     filter_segments,
-    filter_segments2,
+    filter_segments_plot_snapshots,
     find_segments,
+    plot_labels_over_time,
 )
 from config import *
 from preprocess_utils import find_files
@@ -212,160 +213,6 @@ def visualize_clusters(
     plt.savefig(PLOTS_PATH / "clusters.png", dpi=300)
     # plt.show()
 
-
-def plot_labels_over_time(
-    feature_vector_timestamps,
-    labels,
-    feature_vectors,
-    original_data,
-    model,
-    mark_outliers=False,
-    show_local_distance=False,
-    reduce_plot_size=False,
-    filename=None,
-):
-    """Plot labels over time.
-
-    This function plots the labels over time. It also plots the local
-    distance of each data point to its cluster center.
-
-    Args:
-        feature_vector_timestamps (np.array): Timestamps of feature vectors.
-        labels (np.array): Labels.
-        feature_vectors (np.array): Feature vectors.
-        original_data (pd.DataFrame): Original data.
-        model (sklearn.cluster): Cluster model.
-        mark_outliers (bool): If True, outliers will be marked with a grey
-            color.
-        show_local_distance (bool): If True, the local distance of each
-            data point to its cluster center will be plotted.
-        reduce_plot_size (bool): If True, the plot will be reduced in size.
-
-    Returns:
-        None.
-
-    """
-
-    with open("params.yaml", "r") as params_file:
-        params = yaml.safe_load(params_file)
-
-    window_size = params["featurize"]["window_size"]
-    overlap = params["featurize"]["overlap"]
-    columns = params["featurize"]["columns"]
-
-    cluster_centers = pd.read_csv(
-        OUTPUT_PATH / "cluster_centers.csv", index_col=0
-    ).to_numpy()
-
-    if type(columns) is str:
-        columns = [columns]
-
-    step = window_size - overlap
-
-    # dist = model.transform(feature_vectors)
-    dist = euclidean_distances(feature_vectors, cluster_centers)
-    sum_dist = dist.sum(axis=1)
-
-    if mark_outliers:
-        labels = filter_outliers(labels, dist)
-
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    n_features = len(columns)
-    n_labels = len(labels)
-
-    timestamps = original_data.index
-
-    if n_labels > 3000:
-        reduce_plot_size = True
-
-    # If reduce plot size, take only the nth data point, where nth is set to be
-    # a fraction of the window size. Large fraction of the window size is
-    # small, and small fraction if the window size is large.
-    nth = min(int(window_size / np.log(window_size)), window_size)
-    nth = 1500
-
-    j = 0
-
-    for i in range(n_features):
-        # for j in range(n_labels):
-        while j < n_labels:
-
-            start = j * step
-            stop = start + window_size
-            t = timestamps[start:stop]
-            y = original_data[columns[i]].iloc[start:stop]
-
-            cluster = labels[j]
-
-            if cluster == -1:
-                color = "grey"
-            else:
-                color = COLORS[cluster]
-
-            if reduce_plot_size:
-                t = t[::nth]
-                y = y[::nth]
-                # j += 10
-
-            fig.add_trace(
-                go.Scatter(
-                    x=t,
-                    y=original_data[columns[i]].iloc[start:stop],
-                    line=dict(color=color),
-                    showlegend=False,
-                ),
-            )
-
-            j += 1
-
-    if show_local_distance and not reduce_plot_size:
-        label_indeces = labels.reshape(len(labels), 1)
-        local_distance = np.take_along_axis(dist, label_indeces, axis=1).flatten()
-        fig.add_trace(
-            go.Scatter(x=feature_vector_timestamps, y=local_distance),
-            secondary_y=True,
-        )
-
-        # Plot distance to each cluster center
-        for i in range(dist.shape[1]):
-            fig.add_trace(
-                go.Scatter(
-                    x=feature_vector_timestamps,
-                    y=dist[:, i],
-                    line=dict(color=COLORS[i]),
-                    showlegend=False,
-                ),
-                secondary_y=True,
-            )
-
-    # Plot deviation metric
-    fig.add_trace(
-        go.Scatter(
-            # x=timestamps[::step],
-            x=feature_vector_timestamps,
-            y=sum_dist,
-            name="Deviation metric",
-            line=dict(color="black"),
-        ),
-        secondary_y=True,
-    )
-
-    fig.update_layout(title_text="Cluster labels over time")
-    fig.update_xaxes(title_text="date")
-    fig.update_yaxes(title_text="Deviation metric", secondary_y=True)
-    fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
-
-    if filename is None:
-        fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
-        fig.write_html("src/templates/prediction.html")
-        fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
-    else:
-        fig.write_html(filename)
-
-    return fig.to_html(full_html=False)
-
-
 def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model):
     """Plot the distance of each data point to its cluster center.
 
@@ -397,7 +244,6 @@ def plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, mod
 
     return dist, avg_dist
 
-
 def generate_cluster_names(model, cluster_centers):
     """Generate cluster names based on the characteristics of each cluster.
 
@@ -427,7 +273,6 @@ def generate_cluster_names(model, cluster_centers):
     cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
 
     return cluster_names
-
 
 def postprocess(model, cluster_centers, feature_vectors, labels):
     """Postprocess the cluster labels.
@@ -464,48 +309,16 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
         distances_to_centers, sum_distance_to_centers = calculate_distances(
             feature_vectors, model, cluster_centers
         )
-        # labels = filter_segments(labels, min_segment_length, distances_to_centers)
+        labels = filter_segments(labels, min_segment_length, distances_to_centers)
 
-        # TESTING #####################################################
-        # Load data
-        original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
-        feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
-        model = joblib.load(MODELS_FILE_PATH)
+        # # Code to provide snapshots during filtering
+        # original_data = pd.read_csv(ORIGINAL_TIME_SERIES_PATH, index_col=0)
+        # feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
+        # model = joblib.load(MODELS_FILE_PATH)
 
-        labels = filter_segments2(labels, min_segment_length,
-                feature_vector_timestamps, feature_vectors, original_data,
-                model, distances_to_centers)
-
-        # segments = find_segments(labels)
-
-        # segments_sorted_on_length = segments[segments[:, 2].argsort()]
-
-        # shortest_segment = np.min(segments[:, 2])
-        # number_of_segments = len(segments)
-
-        # jup = 0
-        # while True:
-        #     new_labels, _ = _filter_segments(labels, min_segment_length, segments,
-        #             segments_sorted_on_length, distances_to_centers)
-
-        #     if _ == 1:
-        #         break
-        #     else:
-        #         labels = new_labels
-
-        #     if jup % 20 == 0:
-        #         plot_labels_over_time(
-        #             feature_vector_timestamps,
-        #             labels,
-        #             feature_vectors,
-        #             original_data,
-        #             model,
-        #             mark_outliers=False,
-        #             show_local_distance=False,
-        #             filename=f"labels_over_time_{jup}.html"
-        #         )
-        #     jup += 1
-            #################################################################
+        # labels = filter_segments2(labels, min_segment_length,
+        #         feature_vector_timestamps, feature_vectors, original_data,
+        #         model, distances_to_centers)
 
     # Create event log
     event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
