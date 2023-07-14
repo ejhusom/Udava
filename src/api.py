@@ -9,6 +9,7 @@ Created:
     2021-11-29 Monday 14:48:42 
 
 """
+import datetime
 import json
 import os
 import subprocess
@@ -149,41 +150,42 @@ class CreateModel(Resource):
         except:
             print("Reading parameters from HTML form")
             params = yaml.safe_load(open("params_default.yaml"))
-            # params["featurize"]["dataset"] = flask.request.form["dataset"]
+            params["featurize"]["dataset"] = flask.request.form["dataset"]
             params["featurize"]["columns"] = flask.request.form["target"]
             params["featurize"]["timestamp_column"] = flask.request.form[
                 "timestamp_column"
             ]
             params["featurize"]["window_size"] = int(flask.request.form["window_size"])
             params["featurize"]["overlap"] = int(flask.request.form["overlap"])
-            params["cluster"]["learning_method"] = flask.request.form["learning_method"]
-            params["cluster"]["n_clusters"] = int(flask.request.form["n_clusters"])
-            params["cluster"]["max_iter"] = int(flask.request.form["max_iter"])
-            params["cluster"]["annotations_dir"] = flask.request.form["annotations_dir"]
-            params["cluster"]["min_segment_length"] = int(
+            params["train"]["learning_method"] = flask.request.form["learning_method"]
+            params["train"]["n_clusters"] = int(flask.request.form["n_clusters"])
+            params["train"]["max_iter"] = int(flask.request.form["max_iter"])
+            params["train"]["annotations_dir"] = flask.request.form["annotations_dir"]
+            params["train"]["min_segment_length"] = int(
                 flask.request.form["min_segment_length"]
             )
 
             params["featurize"]["convert_timestamp_to_datetime"] = True
-            params["cluster"]["use_predefined_centroids"] = False
-            params["cluster"]["fix_predefined_centroids"] = False
+            params["train"]["use_predefined_centroids"] = False
+            params["train"]["fix_predefined_centroids"] = False
 
             if flask.request.form.get("use_predefined_centroids"):
-                params["cluster"]["use_predefined_centroids"] = True
+                params["train"]["use_predefined_centroids"] = True
                 if flask.request.form.get("fix_predefined_centroids"):
-                    params["cluster"]["fix_predefined_centroids"] = True
+                    params["train"]["fix_predefined_centroids"] = True
 
         # TODO: Currently override the use of annotations, since it is not
         # supported fully in the API.
-        params["cluster"]["use_predefined_centroids"] = False
-        params["cluster"]["fix_predefined_centroids"] = False
+        # params["train"]["use_predefined_centroids"] = False
+        # params["train"]["fix_predefined_centroids"] = False
 
         # The ID of the model is given an UUID.
         model_id = str(uuid.uuid4())
-        params["featurize"]["dataset"] = model_id
+        dataset_id = params["featurize"]["dataset"] + "-" + generate_timestamp(formatting="%Y%m%d%H%M%S")
+        params["featurize"]["dataset"] = dataset_id
 
         # Create directory to host data
-        data_path = DATA_PATH_RAW / model_id
+        data_path = DATA_PATH_RAW / dataset_id
         data_path.mkdir(parents=True, exist_ok=True)
 
         # Save data file
@@ -378,6 +380,13 @@ class Infer(Resource):
         }
 
         return output
+
+def generate_timestamp(formatting="%Y-%m-%d %H:%M:%S"):
+
+    if formatting is None:
+        return datetime.datetime.now()
+
+    return datetime.datetime.now().strftime(formatting)
 
 
 if __name__ == "__main__":

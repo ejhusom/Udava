@@ -78,14 +78,15 @@ class ClusterModel:
         """
 
         params = yaml.safe_load(open("params.yaml"))
-        learning_method = params["cluster"]["learning_method"]
-        max_iter = params["cluster"]["max_iter"]
-        n_clusters = params["cluster"]["n_clusters"]
+        learning_method = params["train"]["learning_method"]
+        max_iter = params["train"]["max_iter"]
+        n_clusters = params["train"]["n_clusters"]
         columns = params["featurize"]["columns"]
         dataset = params["featurize"]["dataset"]
         timestamp_column = params["featurize"]["timestamp_column"]
         window_size = params["featurize"]["window_size"]
         overlap = params["featurize"]["overlap"]
+        min_segment_length = params["postprocess"]["min_segment_length"]
 
         featurized_df = featurize(inference=True, inference_df=inference_df)
         feature_vector_timestamps = featurized_df.index
@@ -108,7 +109,7 @@ class ClusterModel:
 
         # If the minimum segment length is set to be a non-zero value, we need to
         # filter the segments.
-        if params["postprocess"]["min_segment_length"] > 0:
+        if min_segment_length > 0:
             distances_to_centers, sum_distance_to_centers = calculate_distances(
                 feature_vectors, model, cluster_centers
             )
@@ -118,9 +119,9 @@ class ClusterModel:
         event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
         event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
-        plt.figure()
-        plt.plot(labels)
-        plt.show()
+        # plt.figure()
+        # plt.plot(labels)
+        # plt.show()
 
         if plot_results:
             # visualize_clusters(labels, feature_vectors, model)

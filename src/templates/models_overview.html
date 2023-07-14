@@ -41,7 +41,7 @@
                             <td>{{models[model]["params"]["featurize"]["dataset"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["columns"]}}</td>
                             <td>{{models[model]["params"]["featurize"]["window_size"]}}</td>
-                            <td class=tooltip>{{models[model]["params"]["cluster"]["n_clusters"]}} &#9432;
+                            <td class=tooltip>{{models[model]["params"]["train"]["n_clusters"]}} &#9432;
                                 <span class=tooltiptext>
                                     Cluster characteristics:<br>
                                 {%for cluster in models[model]["cluster_characteristics"]%}<br>
@@ -49,7 +49,7 @@
                                 {%endfor%}
                                 </span>
                             </td>
-                            <td>{{models[model]["params"]["cluster"]["learning_method"]}}</td>
+                            <td>{{models[model]["params"]["train"]["learning_method"]}}</td>
                             <td>{{"%0.2f"|format(models[model]["metrics"]["silhouette_score"]|float)}}</td>
                             <td>{{"%0.2f"|format(models[model]["metrics"]["calinski_harabasz_score"]|float)}}</td>
                             <td>{{"%0.2f"|format(models[model]["metrics"]["davies_bouldin_score"]|float)}}</td>
