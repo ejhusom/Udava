@@ -258,7 +258,8 @@ def filter_segments_plot_snapshots(labels, min_segment_length, feature_vector_ti
 
     return new_labels
 
-def create_event_log_from_segments(segments):
+def create_event_log_from_segments(segments,
+        feature_vector_timestamps=None):
     """Create an event log from segments.
 
     Args:
@@ -270,7 +271,9 @@ def create_event_log_from_segments(segments):
     """
 
     events = []
-    feature_vector_timestamps = np.load(OUTPUT_PATH / "feature_vector_timestamps.npy")
+
+    if feature_vector_timestamps is None:
+        feature_vector_timestamps = np.load(FEATURE_VECTOR_TIMESTAMPS_PATH)
 
     for i in range(len(segments)):
 
@@ -393,7 +396,8 @@ def find_segments(labels):
     return np.array(segments)
 
 
-def create_event_log(labels, identifier=""):
+def create_event_log(labels, identifier="",
+        feature_vector_timestamps=None):
     """Create an event log from labels.
 
     This function creates an event log from an array of labels. The event log
@@ -414,7 +418,8 @@ def create_event_log(labels, identifier=""):
         identifier = str(uuid.uuid4())
 
     segments = find_segments(labels)
-    event_log = create_event_log_from_segments(segments)
+    event_log = create_event_log_from_segments(segments,
+            feature_vector_timestamps)
     event_log["case"] = identifier
 
     return event_log

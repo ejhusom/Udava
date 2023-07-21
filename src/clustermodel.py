@@ -116,7 +116,8 @@ class ClusterModel:
             labels = filter_segments(labels, min_segment_length, distances_to_centers)
 
         # Create event log
-        event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
+        event_log = create_event_log(labels,
+                identifier=params["featurize"]["dataset"], feature_vector_timestamps=feature_vector_timestamps)
         event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
         # plt.figure()
