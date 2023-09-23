@@ -324,16 +324,12 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     event_log = create_event_log(labels, identifier=params["featurize"]["dataset"])
 
     # Hardcoded expectations (adhoc solution)
-    expectations = [
-            {"label": 3, "name": "ROTATING GRINDING WHEEL", "duration": (0, 10)},
-            {"label": 4, "name": "ROTATING GRINDING WHEEL + COOLANT", "duration": (2, 9)},
-            {"label": 5, "name": "ROUGHING", "duration": (2, 10)},
-            {"label": 6, "name": "ROUGHING SPARK OUT", "duration": (0.5, 5)},
-            {"label": 0, "name": "DRESSING OPERATION", "duration": (2, 8)},
-            {"label": 4, "name": "ROTATING GRINDING WHEEL + COOLANT", "duration": (2, 9)},
-            {"label": 1, "name": "FINISHING", "duration": (3, 10)},
-            {"label": 2, "name": "FINISHING SPARK OUT", "duration": (2, 8)},
-    ]
+    try:
+        with open("assets/data/expectations/" + params["featurize"]["dataset"], "r") as f:
+            expectations = json.load(f)
+    except:
+        expectations = None
+        print("No expectations found.")
 
     # Create and save cluster names
     cluster_names = generate_cluster_names(model, cluster_centers)
@@ -363,7 +359,8 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
-    event_log_score(event_log, expectations)
+    if expectations != None:
+        event_log_score(event_log, expectations)
 
     event_log.to_csv(OUTPUT_PATH / "event_log.csv")
 
@@ -403,6 +400,7 @@ def event_log_score(event_log, expectations):
         event_label = event["label"]
         # Find duration
         event_duration = event["timestamp"] - event_log.iloc[i - 1]["timestamp"]
+        event_duration = timedelta(seconds=event_duration)
 
         # Find expectations
         # expected_duration_ranges = []
