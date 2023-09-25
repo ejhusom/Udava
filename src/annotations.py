@@ -88,7 +88,7 @@ def create_cluster_centers_from_annotations(data, annotations):
         for start, end in zip(current_annotations["start"], current_annotations["end"]):
 
             # Select the data covered by the current annotation.
-            current_data = data.loc[start:end]
+            current_data = data.iloc[start:end]
 
             # plt.figure()
             # plt.plot(current_data)

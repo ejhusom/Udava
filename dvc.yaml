@@ -25,6 +25,7 @@ stages:
             - assets/data/annotations
             - src/train.py
             - src/config.py
+            - src/annotations.py
         outs:
             - assets/output/labels.csv
             - assets/models

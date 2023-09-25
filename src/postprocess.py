@@ -352,10 +352,11 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
                     + str(cluster_names["cluster_name"][i].split(":")[1])
                 )
 
-                # Add number to expectations
-                for expectation in expectations:
-                    if expectation["name"].lower() == key.lower():
-                        expectation["label"] = i
+                if expectations != None:
+                    # Add number to expectations
+                    for expectation in expectations:
+                        if expectation["name"].lower() == key.lower():
+                            expectation["label"] = i
 
     cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
 
