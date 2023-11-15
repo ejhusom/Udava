@@ -325,8 +325,9 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
 
     # Hardcoded expectations (adhoc solution)
     try:
-        with open("assets/data/expectations/" + params["featurize"]["dataset"], "r") as f:
-            expectations = json.load(f)
+        with open("assets/data/expectations/" + params["featurize"]["dataset"] + "/expectations.json", "r") as f:
+            # expectations = json.load(f) 
+            expectations = eval(f.read())
     except:
         expectations = None
         print("No expectations found.")
@@ -401,7 +402,6 @@ def event_log_score(event_log, expectations):
         event_label = event["label"]
         # Find duration
         event_duration = event["timestamp"] - event_log.iloc[i - 1]["timestamp"]
-        event_duration = timedelta(seconds=event_duration)
 
         # Find expectations
         # expected_duration_ranges = []
@@ -453,6 +453,9 @@ def event_log_score(event_log, expectations):
 
     print(f"Event log score: {score}")
 
+    with open("assets/output/event_log_score.txt", "w") as f:
+        f.write(str(score))
+
     return score, event_log
 
 if __name__ == "__main__":
@@ -467,9 +470,9 @@ if __name__ == "__main__":
 
     labels = postprocess(model, cluster_centers, feature_vectors, labels)
 
-    visualize_clusters(
-        labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False
-    )
+    # visualize_clusters(
+    #     labels, feature_vectors, model, dim1=0, dim2=4, mark_outliers=False
+    # )
 
     plot_labels_over_time(
         feature_vector_timestamps,

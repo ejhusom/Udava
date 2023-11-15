@@ -181,7 +181,8 @@ class CreateModel(Resource):
 
         # The ID of the model is given an UUID.
         model_id = str(uuid.uuid4())
-        dataset_id = params["featurize"]["dataset"] + "-" + generate_timestamp(formatting="%Y%m%d%H%M%S")
+        # dataset_id = params["featurize"]["dataset"] + "-" + generate_timestamp(formatting="%Y%m%d%H%M%S")
+        dataset_id = params["featurize"]["dataset"] #+ "-" + generate_timestamp(formatting="%Y%m%d%H%M%S")
         params["featurize"]["dataset"] = dataset_id
 
         # Create directory to host data
@@ -196,7 +197,7 @@ class CreateModel(Resource):
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
         # Run DVC to create virtual sensor.
-        subprocess.run(["dvc", "repro", "train"], check=True)
+        subprocess.run(["dvc", "repro"], check=True)
 
         # Reread params-file, in case it is changed during pipeline execution
         # (e.g., the number of clusters).

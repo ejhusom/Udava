@@ -48,12 +48,17 @@ stages:
             - src/postprocess.py
             - src/config.py
         outs:
-            - assets/plots/clusters.png
+            # - assets/plots/clusters.png
             - assets/plots/labels_over_time.html
             - assets/output/cluster_names.csv
             - assets/output/event_log.csv
         params:
+            - train.learning_method
+            - train.max_iter
+            - train.n_clusters
             - train.use_predefined_centroids
+            - train.fix_predefined_centroids
+            - train.annotations_dir
             - postprocess.min_segment_length
         metrics:
             - assets/metrics/metrics.json
