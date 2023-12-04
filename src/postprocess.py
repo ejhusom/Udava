@@ -485,4 +485,3 @@ if __name__ == "__main__":
     )
 
     # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
-

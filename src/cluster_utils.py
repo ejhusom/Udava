@@ -384,7 +384,7 @@ def find_segments(labels):
                     [segment_idx, current_label, current_length, start_idx, end_idx]
                 )
         else:
-            end_idx = i - 1
+            end_idx = i
             segments.append(
                 [segment_idx, current_label, current_length, start_idx, end_idx]
             )
