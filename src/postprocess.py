@@ -257,20 +257,39 @@ def generate_cluster_names(model, cluster_centers):
     """
 
     levels = ["lowest", "low", "medium", "high", "highest"]
+    cluster_labels = []
     cluster_names = []
+    cluster_characteristics = []
+    cluster_colors = []
+
     n_clusters = cluster_centers.shape[0]
 
+    # Add index and color for each cluster
     for i in range(n_clusters):
-        cluster_names.append(f"{i} ({COLORS[i]}): ")
+        cluster_colors.append(COLORS[i])
+        cluster_labels.append(i)
+        cluster_names.append("")
+        cluster_characteristics.append("")
 
     maxs = cluster_centers.argmax(axis=0)
     mins = cluster_centers.argmin(axis=0)
 
     for i in range(len(FEATURE_NAMES)):
-        cluster_names[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
-        cluster_names[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
+        # cluster_names[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
+        # cluster_names[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
+        cluster_characteristics[maxs[i]] += "highest " + FEATURE_NAMES[i] + ", "
+        cluster_characteristics[mins[i]] += "lowest " + FEATURE_NAMES[i] + ", "
 
-    cluster_names = pd.DataFrame(cluster_names, columns=["cluster_name"])
+    print(cluster_labels)
+    print(cluster_names)
+    print(cluster_characteristics)
+
+    # cluster_names = pd.DataFrame([cluster_labels, cluster_names, cluster_characteristics], columns=["cluster_label", "cluster_name", "cluster_characteristics"])
+    cluster_names = pd.DataFrame({
+        "cluster_label": cluster_labels,
+        "cluster_name": cluster_names,
+        "cluster_characteristics": cluster_characteristics
+        })
 
     return cluster_names
 
@@ -346,12 +365,13 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     if use_predefined_centroids:
         if len(predefined_centroids_dict) == n_clusters:
             for i, key in enumerate(predefined_centroids_dict):
-                cluster_names["cluster_name"][i] = (
-                    str(cluster_names["cluster_name"][i].split(":")[0])
-                    + ": "
-                    + f" {key}, ".upper()
-                    + str(cluster_names["cluster_name"][i].split(":")[1])
-                )
+                # cluster_names["cluster_name"][i] = (
+                #     str(cluster_names["cluster_name"][i].split(":")[0])
+                #     + ": "
+                #     + f" {key}, ".upper()
+                #     + str(cluster_names["cluster_name"][i].split(":")[1])
+                # )
+                cluster_names["cluster_name"][i] = key.upper()
 
                 if expectations != None:
                     # Add number to expectations
@@ -359,7 +379,8 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
                         if expectation["name"].lower() == key.lower():
                             expectation["label"] = i
 
-    cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv")
+    cluster_names["source"] = params["featurize"]["dataset"]
+    cluster_names.to_csv(OUTPUT_PATH / "cluster_names.csv", index=False)
 
     if expectations != None:
         event_log_score(event_log, expectations)

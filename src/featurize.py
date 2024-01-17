@@ -58,6 +58,8 @@ def featurize(dir_path="", inference=False, inference_df=None):
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
+    print(params)
+    print("=========")
     dataset = params["featurize"]["dataset"]
     columns = params["featurize"]["columns"]
     window_size = params["featurize"]["window_size"]

@@ -420,7 +420,8 @@ def create_event_log(labels, identifier="",
     segments = find_segments(labels)
     event_log = create_event_log_from_segments(segments,
             feature_vector_timestamps)
-    event_log["case"] = identifier
+    event_log["source"] = identifier
+    event_log["case"] = ""
 
     return event_log
 
