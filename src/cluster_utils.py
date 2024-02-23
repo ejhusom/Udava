@@ -13,6 +13,7 @@ Description:
     clustering results.
 
 """
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -471,6 +472,8 @@ def plot_labels_over_time(
     show_local_distance=False,
     reduce_plot_size=False,
     filename=None,
+    return_fig=False,
+    png_only=False,
 ):
     """Plot labels over time.
 
@@ -526,12 +529,45 @@ def plot_labels_over_time(
 
     if n_labels > 3000:
         reduce_plot_size = True
+        print("Reducing the plot size")
 
     # If reduce plot size, take only the nth data point, where nth is set to be
-    # a fraction of the window size. Large fraction of the window size is
+    # a fraction of the window size. Large fraction if the window size is
     # small, and small fraction if the window size is large.
     nth = min(int(window_size / np.log(window_size)), window_size)
-    nth = 1500
+    nth = 100000
+    print("=====")
+    print(n_labels)
+    print(len(original_data))
+
+    # # Reshape labels to match the DataFrame length
+    # expanded_labels = np.repeat(labels, window_size)[:len(original_data)]
+
+    # # Normalize the expanded_labels to range [0,1]
+    # normalized_labels = (expanded_labels - expanded_labels.min()) / (expanded_labels.max() - expanded_labels.min())
+
+    # # Create a custom color scale
+    # color_scale = [(label / max(expanded_labels), color) for label, color in enumerate(COLORS) if label in np.unique(expanded_labels)]
+
+    # Plot the data using scattergl for better performance with large datasets
+    # fig.add_trace(
+    #     go.Scattergl(
+    #         x=original_data.index,
+    #         y=original_data['Channel_4_Data'],
+    #         mode='markers+lines',  # Use both markers and lines
+    #         marker=dict(
+    #             color=normalized_labels,  # Set color of the markers as the normalized labels
+    #             colorscale=color_scale,  # Define custom color scale
+    #             colorbar=dict(title='Labels'),  # Optional: to show a color bar
+    #             size=3,  # Optional: adjust marker size
+    #             cmin=0,  # Set min for color scale
+    #             cmax=1,  # Set max for color scale
+    #         ),
+    #         line=dict(shape='hv')  # Use a horizontal-vertical step line
+    #     )
+    # )
+
+
 
     j = 0
 
@@ -559,7 +595,7 @@ def plot_labels_over_time(
             fig.add_trace(
                 go.Scatter(
                     x=t,
-                    y=original_data[columns[i]].iloc[start:stop],
+                    y=y,
                     line=dict(color=color),
                     showlegend=False,
                 ),
@@ -567,6 +603,11 @@ def plot_labels_over_time(
 
             j += 1
 
+            # if j % 100:
+            #     print(start)
+
+
+    
     if show_local_distance and not reduce_plot_size:
         label_indeces = labels.reshape(len(labels), 1)
         local_distance = np.take_along_axis(dist, label_indeces, axis=1).flatten()
@@ -587,6 +628,8 @@ def plot_labels_over_time(
                 secondary_y=True,
             )
 
+
+
     # Plot deviation metric
     fig.add_trace(
         go.Scatter(
@@ -605,10 +648,144 @@ def plot_labels_over_time(
     fig.update_yaxes(title_text="Sensor data unit", secondary_y=False)
 
     if filename is None:
-        fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
-        fig.write_html("src/templates/prediction.html")
         fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
+        if not png_only:
+            # fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
+            fig.write_html("src/templates/prediction.html")
     else:
         fig.write_html(filename)
 
-    return fig.to_html(full_html=False)
+    if return_fig:
+        return fig
+    else:
+        return fig.to_html(full_html=False)
+
+
+def plot_labels_over_time_matplotlib(
+    feature_vector_timestamps,
+    labels,
+    feature_vectors,
+    original_data,
+    model,
+    mark_outliers=False,
+    show_local_distance=False,
+    reduce_plot_size=False,
+    filename=None,
+    return_fig=False,
+):
+    """Plot labels over time.
+
+    This function plots the labels over time. It also plots the local
+    distance of each data point to its cluster center.
+
+    Args:
+        feature_vector_timestamps (np.array): Timestamps of feature vectors.
+        labels (np.array): Labels.
+        feature_vectors (np.array): Feature vectors.
+        original_data (pd.DataFrame): Original data.
+        model (sklearn.cluster): Cluster model.
+        mark_outliers (bool): If True, outliers will be marked with a grey
+            color.
+        show_local_distance (bool): If True, the local distance of each
+            data point to its cluster center will be plotted.
+        reduce_plot_size (bool): If True, the plot will be reduced in size.
+
+    Returns:
+        None.
+
+    """
+
+    with open("params.yaml", "r") as params_file:
+        params = yaml.safe_load(params_file)
+
+    window_size = params["featurize"]["window_size"]
+    overlap = params["featurize"]["overlap"]
+    columns = params["featurize"]["columns"]
+
+    cluster_centers = pd.read_csv(
+        OUTPUT_PATH / "cluster_centers.csv", index_col=0
+    ).to_numpy()
+
+    if type(columns) is str:
+        columns = [columns]
+
+    step = window_size - overlap
+
+    # dist = model.transform(feature_vectors)
+    dist = euclidean_distances(feature_vectors, cluster_centers)
+    sum_dist = dist.sum(axis=1)
+
+    if mark_outliers:
+        labels = filter_outliers(labels, dist)
+
+    fig, ax1 = plt.subplots(figsize=(10, 6))  # You can adjust the figure size
+    ax2 = ax1.twinx()  # Create a second y-axis to plot the deviation metric
+
+    n_features = len(columns)
+    n_labels = len(labels)
+
+    timestamps = original_data.index
+
+    if n_labels > 3000:
+        reduce_plot_size = True
+
+    # If reduce plot size, take only the nth data point, where nth is set to be
+    # a fraction of the window size. Large fraction of the window size is
+    # small, and small fraction if the window size is large.
+    nth = min(int(window_size / np.log(window_size)), window_size)
+    nth = 10000
+
+    j = 0
+
+    for i in range(n_features):
+        # for j in range(n_labels):
+        while j < n_labels:
+
+            start = j * step
+            stop = start + window_size
+            t = timestamps[start:stop]
+            y = original_data[columns[i]].iloc[start:stop]
+
+            cluster = labels[j]
+
+            if cluster == -1:
+                color = "grey"
+            else:
+                color = COLORS[cluster]
+
+            if reduce_plot_size:
+                t = t[::nth]
+                y = y[::nth]
+                # j += 10
+
+            ax1.plot(t, y, color=color)
+
+            j += 1
+
+    if show_local_distance and not reduce_plot_size:
+        label_indeces = labels.reshape(len(labels), 1)
+        local_distance = np.take_along_axis(dist, label_indeces, axis=1).flatten()
+        ax2.plot(feature_vector_timestamps, local_distance, color='blue')
+
+
+        # Plot distance to each cluster center
+        for i in range(dist.shape[1]):
+            ax2.plot(feature_vector_timestamps, dist[:, i], color=COLORS[i])
+
+
+    # Plot deviation metric
+    ax2.plot(feature_vector_timestamps, sum_dist, color='black', label="Deviation metric")
+
+    ax1.set_title("Cluster labels over time")
+    ax1.set_xlabel("Date")
+    ax1.set_ylabel("Sensor data unit")
+    ax2.set_ylabel("Deviation metric")
+
+    fig.tight_layout()  # Adjust the layout
+
+    plt.savefig(str(PLOTS_PATH / "labels_over_time.png"))  # Save the figure
+
+    if return_fig:
+        return fig
+    # else:
+    #     plt.show()  # Show the plot

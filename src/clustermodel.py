@@ -21,10 +21,10 @@ import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from cluster_utils import calculate_distances
+from cluster_utils import calculate_distances, plot_labels_over_time_matplotlib, plot_labels_over_time
 from config import *
 from featurize import *
-from postprocess import *
+from postprocess import filter_segments
 from preprocess_utils import find_files, move_column
 from train import *
 
@@ -70,7 +70,7 @@ class ClusterModel:
 
         assert check_ok, "Assets missing."
 
-    def run_cluster_model(self, inference_df, plot_results=False):
+    def run_cluster_model(self, inference_df, plot_results=False, return_fig=False, png_only=False):
         """Run cluster model.
 
         Args:
@@ -115,24 +115,23 @@ class ClusterModel:
             )
             labels = filter_segments(labels, min_segment_length, distances_to_centers)
 
-        # Create event log
-        event_log = create_event_log(labels,
-                identifier=params["featurize"]["dataset"], feature_vector_timestamps=feature_vector_timestamps)
-        event_log.to_csv(OUTPUT_PATH / "event_log.csv")
-
         # plt.figure()
         # plt.plot(labels)
         # plt.show()
 
         if plot_results:
+            print("Plotting results...")
             # visualize_clusters(labels, feature_vectors, model)
-            fig_div = plot_labels_over_time(
-                feature_vector_timestamps, labels, feature_vectors, inference_df, model
+            fig = plot_labels_over_time(
+                feature_vector_timestamps, labels, feature_vectors, inference_df, model, return_fig=return_fig, png_only=png_only
             )
+            # fig = plot_labels_over_time_matplotlib(
+            #     feature_vector_timestamps, labels, feature_vectors, inference_df, model, return_fig=return_fig
+            # )
             # plot_cluster_center_distance(feature_vector_timestamps, feature_vectors, model)
-            return fig_div
+            return fig, feature_vector_timestamps, labels, sum_distance_to_centers
         else:
-            return feature_vector_timestamps, labels, sum_distance_to_centers
+            return None, feature_vector_timestamps, labels, sum_distance_to_centers
 
     def dbscan_predict(self, model, feature_vectors, metric=sp.spatial.distance.cosine):
         """Predict labels for cluster models without native method for

@@ -29,7 +29,9 @@ from flask_restful import Api, Resource, reqparse
 from plotly.subplots import make_subplots
 
 from clustermodel import ClusterModel
-from config import API_MODELS_PATH, DATA_PATH_RAW, METRICS_FILE_PATH
+from cluster_utils import create_event_log
+from config import API_MODELS_PATH, DATA_PATH_RAW, METRICS_FILE_PATH, LABELS_PATH, PLOTS_PATH, OUTPUT_PATH
+from postprocess import event_log_score
 from udava import Udava
 
 app = flask.Flask(__name__)
@@ -302,16 +304,38 @@ class InferGUI(Resource):
         subprocess.run(["dvc", "repro", "train"], check=True)
 
         if flask.request.form.get("plot"):
-            fig_div = cm.run_cluster_model(inference_df=inference_df, plot_results=True)
+            plot_results=True
+        else:
+            plot_results=False
+                
+        print("Running cluster model...")
+        fig_div, timestamps, labels, distance_metric = cm.run_cluster_model(
+            inference_df=inference_df, plot_results=plot_results
+        )
 
+        # Evaluate event log score
+        print("Creating event log...")
+        event_log = create_event_log(labels, identifier=params["featurize"]["dataset"], feature_vector_timestamps=timestamps)
+        event_log.to_csv(OUTPUT_PATH / "event_log.csv")
+
+        try:
+            with open("assets/data/expectations/" + params["featurize"]["dataset"] + "/expectations.json", "r") as f:
+                # expectations = json.load(f) 
+                expectations = eval(f.read())
+        except:
+            expectations = None
+            print("No expectations found.")
+
+        if expectations != None:
+            event_log_score(event_log, expectations)
+
+        # Plot results
+        if flask.request.form.get("plot"):
             if flask.request.form.get("plot_in_new_window"):
                 return flask.redirect("prediction")
             else:
                 return flask.redirect("inference_result")
         else:
-            timestamps, labels, distance_metric = cm.run_cluster_model(
-                inference_df=inference_df
-            )
             timestamps = np.array(timestamps, dtype=np.int32).reshape(-1, 1)
             labels = labels.reshape(-1, 1)
             distance_metric = distance_metric.reshape(-1, 1)
@@ -344,13 +368,11 @@ class Infer(Resource):
 
         """
 
-        input_json = flask.request.get_json()
-        model_id = str(input_json["param"]["modeluid"])
-
-        inference_df = pd.DataFrame(
-            input_json["scalar"]["data"],
-            columns=input_json["scalar"]["headers"],
-        )
+        file = flask.request.files['file']
+        model_id = flask.request.form["model_id"]
+        filename = "inference.csv"
+        file.save(filename)
+        inference_df = pd.read_csv(filename)
 
         models = get_models()
         model = models[model_id]
@@ -359,13 +381,14 @@ class Infer(Resource):
         timestamp_column_name = params["featurize"]["timestamp_column"]
         inference_df.set_index(timestamp_column_name, inplace=True)
 
+
         cm = ClusterModel(params_file=params)
 
         # Run DVC to fetch correct assets.
         subprocess.run(["dvc", "repro", "train"], check=True)
 
-        timestamps, labels, distance_metric = cm.run_cluster_model(
-            inference_df=inference_df
+        fig, timestamps, labels, distance_metric = cm.run_cluster_model(
+            inference_df=inference_df, plot_results=True, return_fig=True, png_only=True
         )
         timestamps = np.array(timestamps).reshape(-1, 1)
         labels = labels.reshape(-1, 1)
@@ -373,12 +396,32 @@ class Infer(Resource):
         output_data = np.concatenate([timestamps, labels, distance_metric], axis=1)
         output_data = output_data.tolist()
 
+        # fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
+
+        # Evaluate event log score
+        print("Creating event log...")
+        event_log = create_event_log(labels, identifier=params["featurize"]["dataset"], feature_vector_timestamps=timestamps)
+        event_log.to_csv(OUTPUT_PATH / "event_log.csv")
+
+        try:
+            with open("assets/data/expectations/" + params["featurize"]["dataset"] + "/expectations.json", "r") as f:
+                expectations = eval(f.read())
+        except:
+            expectations = None
+            print("No expectations found.")
+
+        if expectations != None:
+            score, _ = event_log_score(event_log, expectations)
+
         output = {}
-        output["param"] = {"modeluid": model_id}
-        output["scalar"] = {
-            "headers": ["date", "cluster", "metric"],
-            "data": output_data,
-        }
+        # output["param"] = {"modeluid": model_id}
+        # output["scalar"] = {
+        #     "headers": ["date", "cluster", "metric"],
+        #     "data": output_data,
+        # }
+        output = {}
+        output["max_deviation_metric"] = {"value": distance_metric.max()}
+        output["event_log_score"] = {"value": score}
 
         return output
 

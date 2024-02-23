@@ -418,17 +418,31 @@ def event_log_score(event_log, expectations):
     event_log["duration_correct"] = 0
     event_log["next_event_correct"] = 0
 
+    if isinstance(event_log["timestamp"][0], np.ndarray):
+        event_log["timestamp"] = event_log["timestamp"].apply(lambda x: x[0])
+
+    if isinstance(event_log["timestamp"][0], str):
+        event_log["timestamp"] = pd.to_datetime(event_log["timestamp"])
+
     # Loop through every second row in dataframe
     for i, event in event_log.iloc[1::2].iterrows():
         event_label = event["label"]
+
         # Find duration
         event_duration = event["timestamp"] - event_log.iloc[i - 1]["timestamp"]
+        if isinstance(event_duration, np.float64):
+            seconds = event_duration
+        else:
+            seconds = event_duration.seconds
+        event_duration = timedelta(seconds=seconds)
+
 
         # Find expectations
-        # expected_duration_ranges = []
+        expected_duration_ranges = []
         expected_next_events = []
         for j, expectation in enumerate(expectations):
             if expectation["label"] == event_label:
+
                 # expected_duration_ranges.append(expectation["duration"])
                 expected_duration_range = expectation["duration"]
 
@@ -444,9 +458,9 @@ def event_log_score(event_log, expectations):
         min_duration = timedelta(seconds=expected_duration_range[0])
         max_duration = timedelta(seconds=expected_duration_range[1])
         if event_duration < min_duration or event_duration > max_duration:
-            print(
-                f"Event {event_label} has duration {event_duration} which is not in the expected range {expected_duration_range} (timestamp: {event['timestamp']})"
-            )
+            # print(
+            #     f"Event {event_label} has duration {event_duration} which is not in the expected range {expected_duration_range} (timestamp: {event['timestamp']})"
+            # )
             misses += 1
         else:
             hits += 1
@@ -464,9 +478,9 @@ def event_log_score(event_log, expectations):
             hits += 1
             event_log["next_event_correct"][i] = 1
         else:
-            print(
-                f"Event {event_label} has next event {next_event_label} which is not in the expected events {expected_next_events} (timestamp: {event['timestamp']})"
-            )
+            # print(
+            #     f"Event {event_label} has next event {next_event_label} which is not in the expected events {expected_next_events} (timestamp: {event['timestamp']})"
+            # )
             misses += 1
 
     score = hits / (hits + misses)
