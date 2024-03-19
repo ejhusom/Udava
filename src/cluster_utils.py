@@ -569,10 +569,10 @@ def plot_labels_over_time(
 
 
 
-    j = 0
 
     for i in range(n_features):
         # for j in range(n_labels):
+        j = 0
         while j < n_labels:
 
             start = j * step
@@ -735,10 +735,10 @@ def plot_labels_over_time_matplotlib(
     nth = min(int(window_size / np.log(window_size)), window_size)
     nth = 10000
 
-    j = 0
 
     for i in range(n_features):
         # for j in range(n_labels):
+        j = 0
         while j < n_labels:
 
             start = j * step
