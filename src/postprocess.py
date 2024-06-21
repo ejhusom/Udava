@@ -311,6 +311,8 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
 
     """
 
+    PLOTS_PATH.mkdir(parents=True, exist_ok=True)
+
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
 
@@ -354,15 +356,15 @@ def postprocess(model, cluster_centers, feature_vectors, labels):
     # Create and save cluster names
     cluster_names = generate_cluster_names(model, cluster_centers)
 
-    # Read predefined centroids from file
-    with open(PREDEFINED_CENTROIDS_PATH, "r") as f:
-        predefined_centroids_dict = json.load(f)
-
     # Use cluster names from annotated data, if the number of clusters still
     # matches the number of unique annotation label (the number of clusters
     # might change when using cluster algorithms that automatically decide on a
     # suitable number of clusters.
     if use_predefined_centroids:
+        # Read predefined centroids from file
+        with open(PREDEFINED_CENTROIDS_PATH, "r") as f:
+            predefined_centroids_dict = json.load(f)
+
         if len(predefined_centroids_dict) == n_clusters:
             for i, key in enumerate(predefined_centroids_dict):
                 # cluster_names["cluster_name"][i] = (

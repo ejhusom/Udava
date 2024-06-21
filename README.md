@@ -27,8 +27,6 @@ Start the server by running:
 python3 src/api.py
 ```
 
-
-
 ## Parameters
 
 

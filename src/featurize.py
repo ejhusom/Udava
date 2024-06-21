@@ -22,7 +22,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import pycatch22
-
 # import tsfresh
 import yaml
 from pandas.api.types import is_numeric_dtype

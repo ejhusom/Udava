@@ -12,16 +12,12 @@ Created:
 import json
 import sys
 
+import joblib
 import numpy as np
 import pandas as pd
 import yaml
-import joblib
-from sklearn.cluster import (
-    DBSCAN,
-    AffinityPropagation,
-    MeanShift,
-    MiniBatchKMeans,
-)
+from sklearn.cluster import (DBSCAN, AffinityPropagation, MeanShift,
+                             MiniBatchKMeans)
 
 from annotations import *
 from config import *
