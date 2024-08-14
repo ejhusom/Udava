@@ -3,10 +3,13 @@
 Unsupervised learning for DAta VAlidation.
 
 
-## Installation
+## Udava as a Service
 
+Choose option A or B to start the Udava service on your computer.
 
-Developed using Python3.8. You can install the required modules by creating a
+### A) Run Udava directly on host
+
+You can install the required modules by creating a
 virtual environment and install the `requirements.txt`-file (run these commands
 from the main folder):
 
@@ -17,14 +20,19 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-
-## Udava as a Service
-
-
 Start the server by running:
 
 ```
 python3 src/api.py
+```
+
+
+### B) Running Udava in Docker
+
+
+```
+docker build -t udava -f Dockerfile .
+docker run -p 5000:5000 -it -v $(pwd)/assets:/usr/Udava/assets -v $(pwd)/.dvc:/usr/Udava/.dvc udava
 ```
 
 ## Parameters

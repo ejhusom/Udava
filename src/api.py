@@ -368,11 +368,20 @@ class Infer(Resource):
 
         """
 
-        file = flask.request.files['file']
-        model_id = flask.request.form["model_id"]
-        filename = "inference.csv"
-        file.save(filename)
-        inference_df = pd.read_csv(filename)
+        # If file is JSON
+        if flask.request.is_json:
+            input_json = flask.request.get_json()
+            model_id = str(input_json["param"]["modeluid"])
+
+            inference_df = pd.DataFrame(
+                input_json["scalar"]["data"],
+                columns=input_json["scalar"]["headers"],
+            )
+        # Else if file is csv
+        else:
+            model_id = flask.request.form["id"]
+            csv_file = flask.request.files["file"]
+            inference_df = pd.read_csv(csv_file, index_col=0)
 
         models = get_models()
         model = models[model_id]
