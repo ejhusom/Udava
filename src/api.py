@@ -419,18 +419,18 @@ class Infer(Resource):
             expectations = None
             print("No expectations found.")
 
-        if expectations != None:
-            score, _ = event_log_score(event_log, expectations)
-
-        output = {}
-        # output["param"] = {"modeluid": model_id}
-        # output["scalar"] = {
-        #     "headers": ["date", "cluster", "metric"],
-        #     "data": output_data,
-        # }
         output = {}
         output["max_deviation_metric"] = {"value": distance_metric.max()}
-        output["event_log_score"] = {"value": score}
+
+        if expectations != None:
+            score, _ = event_log_score(event_log, expectations)
+            output["event_log_score"] = {"value": score}
+
+        output["param"] = {"modeluid": model_id}
+        output["scalar"] = {
+            "headers": ["date", "cluster", "metric"],
+            "data": output_data,
+        }
 
         return output
 
