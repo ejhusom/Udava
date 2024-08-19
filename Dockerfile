@@ -17,6 +17,7 @@ COPY params_default.yaml ./params_default.yaml
 
 EXPOSE 5000
 
+RUN git init
 RUN dvc init --no-scm
 
 CMD ["python3", "src/api.py"]

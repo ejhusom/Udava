@@ -650,7 +650,7 @@ def plot_labels_over_time(
     if filename is None:
         fig.write_image(str(PLOTS_PATH / "labels_over_time.png"), height=500, width=860)
         if not png_only:
-            # fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
+            fig.write_html(str(PLOTS_PATH / "labels_over_time.html"))
             fig.write_html("src/templates/prediction.html")
     else:
         fig.write_html(filename)
