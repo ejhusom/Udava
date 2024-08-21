@@ -77,7 +77,7 @@ Explanation:
 The JSON can be sent to the API using `curl`:
 
 ```
-curl -X POST -H "Content-Type: application/json" -d @data.json http://172.17.0.2:5000/infer
+curl -X POST -H "Content-Type: application/json" -d @data.json http://locahost:5000/infer
 ```
 
 ##### CSV
