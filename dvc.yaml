@@ -10,6 +10,7 @@ stages:
             - assets/data/featurized
             - assets/output/feature_vector_timestamps.npy
             - assets/output/original_data.csv
+            - assets/scalers/input_scaler.z
         params:
             - featurize.columns
             - featurize.dataset
