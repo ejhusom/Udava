@@ -426,6 +426,15 @@ class Infer(Resource):
             score, _ = event_log_score(event_log, expectations)
             output["event_log_score"] = {"value": score}
 
+        # Make sure that the values in the list output_data are serializable.
+        for i in range(len(output_data)):
+            for j in range(len(output_data[i])):
+                if isinstance(output_data[i][j], np.int64):
+                    output_data[i][j] = int(output_data[i][j])
+                elif isinstance(output_data[i][j], np.float64):
+                    output_data[i][j] = float(output_data[i][j])
+        
+        output = {}
         output["param"] = {"modeluid": model_id}
         output["scalar"] = {
             "headers": ["date", "cluster", "metric"],
