@@ -85,7 +85,7 @@ curl -X POST -H "Content-Type: application/json" -d @data.json http://172.17.0.2
 CSV data can be sent to the API using `curl`:
 
 ```
-curl http://localhost:5000/infer -F file=@assets/data/raw/entrust-highend/simulated_low_end_traces_from_high_end_device.csv -F model_id=151d2394-7654-4958-9e82-174c7198368c
+curl http://localhost:5000/infer -F file=@data.csv -F model_id=151d2394-7654-4958-9e82-174c7198368c
 ```
 
 Make sure that the CSV contains the same columns as the model expects.
