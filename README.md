@@ -3,11 +3,19 @@
 Unsupervised learning for DAta VAlidation.
 
 
-## Udava as a Service
+## Installation and setup
 
 Choose option A or B to start the Udava service on your computer.
 
-### A) Run Udava directly on host
+### A) Running Udava in Docker
+
+
+```
+docker build -t udava -f Dockerfile .
+docker run -p 5000:5000 -it -v $(pwd)/assets:/usr/Udava/assets -v $(pwd)/.dvc:/usr/Udava/.dvc udava
+```
+
+### B) Run Udava directly on host
 
 You can install the required modules by creating a
 virtual environment and install the `requirements.txt`-file (run these commands
@@ -26,30 +34,58 @@ Start the server by running:
 python3 src/api.py
 ```
 
+## Usage
 
-### B) Running Udava in Docker
+### GUI
 
+The GUI is available at `http://localhost:5000/`.
+Follow the instructions in the GUI to create models and upload data for inference.
+
+### API
+
+The API is available at `http://localhost:5000/`.
+
+#### POST /infer
+
+##### JSON
+
+The input should look like this:
 
 ```
-docker build -t udava -f Dockerfile .
-docker run -p 5000:5000 -it -v $(pwd)/assets:/usr/Udava/assets -v $(pwd)/.dvc:/usr/Udava/.dvc udava
+{
+  "param": {
+    "modeluid": "3a7ee233-2380-4420-9e1d-246932bdede4"
+  },
+  "scalar": {
+    "headers": ["time", "memory_used"],
+    "data": [
+      [1718725511, 1201184768],
+      [1718725514, 1201840128]
+    ]
+  }
+}
 ```
 
-## Parameters
+Explanation:
 
+- **`param.modeluid`**: The unique identifier (UUID) of the model used.
+- **`scalar.headers`**: An array of strings representing the data columns (in this case, `time` and `memory_used`).
+- **`scalar.data`**: A 2D array with each inner array representing a data point:
+  - The first value is a Unix timestamp.
+  - The second value is the memory used in bytes.
 
-- `featurize`
-    - `dataset`
-    - `window_size`
-    - `overlap`
-    - `timestamp_column`
-    - `columns`
-- `cluster`
-    - `learning_method`
-    - `n_clusters`
-    - `max_iter`
-    - `use_predefined_centroids`
-    - `fix_predefined_centroids`
-    - `annotations_dir`
-    - `min_segment_length`: A segment is defined as a section of the time series that has an uninterrupted sequence of data points with the same cluster label. This parameter defines the minimum length such a sequence should have. If a segment is shorter than this length, the data points will be reassigned to another cluster.
-- `evaluate`
+The JSON can be sent to the API using `curl`:
+
+```
+curl -X POST -H "Content-Type: application/json" -d @data.json http://172.17.0.2:5000/infer
+```
+
+##### CSV
+
+CSV data can be sent to the API using `curl`:
+
+```
+curl http://localhost:5000/infer -F file=@assets/data/raw/entrust-highend/simulated_low_end_traces_from_high_end_device.csv -F model_id=151d2394-7654-4958-9e82-174c7198368c
+```
+
+Make sure that the CSV contains the same columns as the model expects.
