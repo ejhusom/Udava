@@ -379,17 +379,18 @@ class Infer(Resource):
             )
         # Else if file is csv
         else:
-            model_id = flask.request.form["id"]
-            csv_file = flask.request.files["file"]
-            inference_df = pd.read_csv(csv_file, index_col=0)
+            model_id = flask.request.form.get('model_id')
+            csv_file = flask.request.files.get('file')
+            inference_df = pd.read_csv(csv_file)
 
         models = get_models()
         model = models[model_id]
         params = model["params"]
+        print(model_id)
+        print(params)
 
         timestamp_column_name = params["featurize"]["timestamp_column"]
         inference_df.set_index(timestamp_column_name, inplace=True)
-
 
         cm = ClusterModel(params_file=params)
 
@@ -457,4 +458,4 @@ if __name__ == "__main__":
     # api.add_resource(InferDemo, "/infer_demo")
     api.add_resource(InferGUI, "/infer_gui")
     api.add_resource(Infer, "/infer")
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=True)
