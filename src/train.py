@@ -107,17 +107,15 @@ def train(dir_path=""):
 
     unique_labels = np.unique(labels)
 
+    # print("=======================")
+    # print("BEFORE")
+    # print(feature_vectors.shape)
+    # print(model.cluster_centers_.shape)
+    # print("=======================")
+
     # These lines will remove the noise cluster of DBSCAN
     # if unique_labels[0] == -1:
     #     unique_labels = unique_labels[1:]
-
-    n_clusters = len(unique_labels)
-    params["train"]["n_clusters"] = n_clusters
-
-    # TODO: Not sure if it is a good idea to rewrite params.yaml during
-    # execution of the pipeline.
-    with open("params.yaml", "w") as params_file:
-        yaml.dump(params, params_file)
 
     # If the model does not calculate its own cluster centers, do the
     # computation manually based on core samples or similar. Applies for the
@@ -161,7 +159,12 @@ def train(dir_path=""):
 
         cluster_centers = np.array(cluster_centers)
 
-    assert n_clusters == cluster_centers.shape[0]
+    params["train"]["n_clusters"] = cluster_centers.shape[0]
+
+    # TODO: Not sure if it is a good idea to rewrite params.yaml during
+    # execution of the pipeline.
+    with open("params.yaml", "w") as params_file:
+        yaml.dump(params, params_file)
 
     # Clustering algorithms like AffinityPropagation might fail to converge,
     # so MiniBatchKMeans serves as a fallback method.
@@ -176,6 +179,12 @@ def train(dir_path=""):
     joblib.dump(model, MODELS_FILE_PATH)
     pd.DataFrame(labels).to_csv(LABELS_PATH)
     pd.DataFrame(cluster_centers).to_csv(CLUSTER_CENTERS_PATH)
+
+    # print("=======================")
+    # print("AFTER")
+    # print(feature_vectors.shape)
+    # print(cluster_centers.shape)
+    # print("=======================")
 
 
 def build_model(learning_method, n_clusters, max_iter):

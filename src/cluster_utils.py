@@ -309,6 +309,20 @@ def calculate_model_metrics(model, feature_vectors, labels):
 
     """
 
+    # Set invalid default values to indicate that they were not computed
+    metrics = {
+        "silhouette_score": -1000,
+        "calinski_harabasz_score": -1000,
+        "davies_bouldin_score": 1000
+    }
+
+
+    n_detected_clusters = np.unique(labels)
+
+    if len(n_detected_clusters) == 1:
+        print("Only one cluster detected. Skipping evaluation.")
+        return metrics
+
     silhouette = silhouette_score(feature_vectors, labels)
     chs = calinski_harabasz_score(feature_vectors, labels)
     dbs = davies_bouldin_score(feature_vectors, labels)

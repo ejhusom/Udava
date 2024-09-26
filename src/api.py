@@ -199,7 +199,13 @@ class CreateModel(Resource):
         yaml.dump(params, open("params.yaml", "w"), allow_unicode=True)
 
         # Run DVC to create virtual sensor.
-        subprocess.run(["dvc", "repro"], check=True)
+        try:
+            subprocess.run(["dvc", "repro"], check=True)
+        except subprocess.CalledProcessError as e:
+            print(e)
+            # If DVC fails, rerun the full pipeline using --force.
+            print("DVC failed. Forcing rerun of full pipeline.")
+            subprocess.run(["dvc", "repro", "--force"], check=True)
 
         # Reread params-file, in case it is changed during pipeline execution
         # (e.g., the number of clusters).
