@@ -384,6 +384,9 @@ def find_segments(labels):
 
     segments = []
 
+    if len(labels) == 0:
+        return np.array(segments)
+
     current_label = labels[0]
     current_length = 1
     start_idx = 0
@@ -393,13 +396,8 @@ def find_segments(labels):
     for i in range(1, len(labels)):
         if labels[i] == current_label:
             current_length += 1
-            if i == len(labels) - 1:
-                end_idx = i
-                segments.append(
-                    [segment_idx, current_label, current_length, start_idx, end_idx]
-                )
         else:
-            end_idx = i
+            end_idx = i - 1
             segments.append(
                 [segment_idx, current_label, current_length, start_idx, end_idx]
             )
@@ -408,8 +406,13 @@ def find_segments(labels):
             current_length = 1
             start_idx = i
 
-    return np.array(segments)
+    # Append the last segment
+    end_idx = len(labels) - 1
+    segments.append(
+        [segment_idx, current_label, current_length, start_idx, end_idx]
+    )
 
+    return np.array(segments)
 
 def create_event_log(labels, identifier="",
         feature_vector_timestamps=None):
