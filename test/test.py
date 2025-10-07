@@ -156,6 +156,72 @@ class TestUDAVA(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_params(invalid_params)
 
+        def test_validate_params_missing_fields(self):
+            """Test validate_params with missing required fields."""
+            params = {
+                "featurize": {
+                    # Missing 'columns'
+                    "convert_timestamp_to_datetime": True,
+                    "dataset": "meter_1274",
+                    "overlap": 0,
+                    "timestamp_column": "ResultTimeStamp",
+                    "window_size": 30,
+                },
+                "postprocess": {
+                    "min_segment_length": 1,
+                },
+                "train": {
+                    "annotations_dir": None,
+                    "fix_predefined_centroids": False,
+                    "learning_method": "minibatchkmeans",
+                    "max_iter": 100,
+                    "n_clusters": 7,
+                    "use_predefined_centroids": False,
+                },
+            }
+            with self.assertRaises(ValueError):
+                validate_params(params)
+
+        def test_validate_params_invalid_types(self):
+            """Test validate_params with invalid types for parameters."""
+            params = {
+                "featurize": {
+                    "columns": 123,  # Should be str or list
+                    "convert_timestamp_to_datetime": "True",  # Should be bool
+                    "dataset": 456,  # Should be str
+                    "overlap": -1,  # Should be non-negative int
+                    "timestamp_column": 789,  # Should be str
+                    "window_size": "thirty",  # Should be int
+                },
+                "postprocess": {
+                    "min_segment_length": "one",  # Should be int
+                },
+                "train": {
+                    "annotations_dir": 123,  # Should be str or None
+                    "fix_predefined_centroids": "False",  # Should be bool
+                    "learning_method": "minibatchkmeans",
+                    "max_iter": "hundred",  # Should be int
+                    "n_clusters": 0,  # Should be positive int
+                    "use_predefined_centroids": "False",  # Should be bool
+                },
+            }
+            with self.assertRaises(ValueError):
+                validate_params(params)
+
+        def test_validate_params_edge_cases(self):
+            """Test validate_params with edge cases like empty dicts and None values."""
+            params = {}
+            with self.assertRaises(ValueError):
+                validate_params(params)
+
+            params = {
+                "featurize": None,
+                "postprocess": None,
+                "train": None,
+            }
+            with self.assertRaises(Exception):
+                validate_params(params)
+
 
 if __name__ == "__main__":
 

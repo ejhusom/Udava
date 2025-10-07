@@ -9,7 +9,9 @@ Created:
     2021-10-06
 
 """
+
 import argparse
+import logging
 
 import joblib
 import matplotlib.pyplot as plt
@@ -37,6 +39,11 @@ from config import *
 # pd.options.plotting.backend = "plotly"
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+)
+
 class Udava:
     def __init__(
         self,
@@ -53,11 +60,12 @@ class Udava:
         self.timestamp_column_name = timestamp_column_name
 
         if self.df.empty:
+            logging.error("Input DataFrame is empty. Please provide a valid DataFrame.")
             raise ValueError("Input DataFrame is empty. Please provide a valid DataFrame.")
 
         # Ensure Timestamp column exists or create it early
         if self.timestamp_column_name not in self.df.columns:
-            print(f"Warning: '{self.timestamp_column_name}' column not found. Using row indices as timestamps.")
+            logging.warning(f"'{self.timestamp_column_name}' column not found. Using row indices as timestamps.")
             self.df[self.timestamp_column_name] = self.df.index
 
         self.train_start_idx = 0 if train_start_idx is None else train_start_idx
@@ -120,7 +128,8 @@ class Udava:
         self.overlap = overlap
 
         if window_size <= 0:
-            raise ValueError("window_size must be greater than 0") 
+            logging.error("window_size must be greater than 0")
+            raise ValueError("window_size must be greater than 0")
 
         self.train_fingerprints, self.train_fp_timestamps = self._create_fingerprints(
             self.train_set,
@@ -229,6 +238,7 @@ class Udava:
 
         valid_methods = ["meanshift", "minibatchkmeans"]
         if method not in valid_methods:
+            logging.error(f"Invalid method '{method}'. Supported methods are: {valid_methods}")
             raise ValueError(f"Invalid method '{method}'. Supported methods are: {valid_methods}")
 
         if method == "meanshift":
@@ -239,26 +249,35 @@ class Udava:
         # self.model = GaussianMixture(n_components=1)
         # self.model = AffinityPropagation(damping=0.5)
 
+        logging.info(f"Model built using method: {method}, n_clusters: {n_clusters}, max_iter: {max_iter}")
         return self.model
 
     def load_model(self, filepath):
-
-        self.model = joblib.load(filepath)
+        try:
+            self.model = joblib.load(filepath)
+            logging.info(f"Model loaded from {filepath}")
+        except Exception as e:
+            logging.error(f"Failed to load model from {filepath}: {e}")
+            raise
 
     def fit_predict(self):
-
         if self.model is None:
+            logging.info("No model found, building a new one.")
             self.build_model()
+        try:
+            self.train_labels = self.model.fit_predict(self.train_fingerprints)
+            self.test_labels = self.model.predict(self.test_fingerprints)
+            self.clusters = np.unique(self.train_labels)
 
-        self.train_labels = self.model.fit_predict(self.train_fingerprints)
-        self.test_labels = self.model.predict(self.test_fingerprints)
-        self.clusters = np.unique(self.train_labels)
-
-        # Calculate distances to cluster centers for both train and test set
-        self.train_dist = self.model.transform(self.train_fingerprints)
-        self.test_dist = self.model.transform(self.test_fingerprints)
-        self.train_dist_sum = self.train_dist.sum(axis=1)
-        self.test_dist_sum = self.test_dist.sum(axis=1)
+            # Calculate distances to cluster centers for both train and test set
+            self.train_dist = self.model.transform(self.train_fingerprints)
+            self.test_dist = self.model.transform(self.test_fingerprints)
+            self.train_dist_sum = self.train_dist.sum(axis=1)
+            self.test_dist_sum = self.test_dist.sum(axis=1)
+            logging.info("Model fit and predictions completed.")
+        except Exception as e:
+            logging.error(f"Error during fit_predict: {e}")
+            raise
 
     def predict(self):
 
