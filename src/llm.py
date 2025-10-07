@@ -16,12 +16,14 @@ import numpy as np
 import openai
 
 from config import *
+from udava import validate_params
 
 def explain():
 
     # Load parameters
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
+    validate_params(params)
 
     dataset = params["featurize"]["dataset"]
     columns = params["featurize"]["columns"]

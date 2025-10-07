@@ -18,6 +18,7 @@ import pandas as pd
 import yaml
 from sklearn.cluster import (DBSCAN, AffinityPropagation, MeanShift,
                              MiniBatchKMeans)
+from udava import validate_params
 
 from annotations import *
 from config import *
@@ -41,6 +42,7 @@ def train(dir_path=""):
 
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
+    validate_params(params)
 
     learning_method = params["train"]["learning_method"]
     n_clusters = params["train"]["n_clusters"]

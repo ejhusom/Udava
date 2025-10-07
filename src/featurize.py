@@ -26,6 +26,7 @@ import pycatch22
 import yaml
 from pandas.api.types import is_numeric_dtype
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from udava import validate_params 
 
 from config import *
 from preprocess_utils import find_files, move_column
@@ -56,6 +57,7 @@ def featurize(dir_path="", inference=False, inference_df=None):
     # Load parameters
     with open("params.yaml", "r") as params_file:
         params = yaml.safe_load(params_file)
+    validate_params(params)
 
     print(params)
     print("=========")

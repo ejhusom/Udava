@@ -32,7 +32,7 @@ from clustermodel import ClusterModel
 from cluster_utils import create_event_log
 from config import API_MODELS_PATH, DATA_PATH_RAW, METRICS_FILE_PATH, LABELS_PATH, PLOTS_PATH, OUTPUT_PATH
 from postprocess import event_log_score
-from udava import Udava
+from udava import Udava, validate_params
 
 app = flask.Flask(__name__)
 api = Api(app)
@@ -211,6 +211,7 @@ class CreateModel(Resource):
         # (e.g., the number of clusters).
         with open("params.yaml", "r") as params_file:
             params = yaml.safe_load(params_file)
+        validate_params(params)
 
         # Create dict containing all metadata about model
         model_metadata = {}

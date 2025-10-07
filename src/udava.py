@@ -52,6 +52,14 @@ class Udava:
 
         self.timestamp_column_name = timestamp_column_name
 
+        if self.df.empty:
+            raise ValueError("Input DataFrame is empty. Please provide a valid DataFrame.")
+
+        # Ensure Timestamp column exists or create it early
+        if self.timestamp_column_name not in self.df.columns:
+            print(f"Warning: '{self.timestamp_column_name}' column not found. Using row indices as timestamps.")
+            self.df[self.timestamp_column_name] = self.df.index
+
         self.train_start_idx = 0 if train_start_idx is None else train_start_idx
         self.train_stop_idx = (
             self.df.shape[0] - 1 if train_stop_idx is None else train_stop_idx
@@ -75,6 +83,13 @@ class Udava:
         ]
 
         self.model = None
+
+        # Ensure train/test indices are within bounds for non-empty DataFrame
+        if self.train_start_idx >= self.df.shape[0] or self.train_stop_idx >= self.df.shape[0]:
+            raise IndexError("Train indices are out of bounds for the DataFrame.")
+
+        if self.test_start_idx >= self.df.shape[0] or self.test_stop_idx >= self.df.shape[0]:
+            raise IndexError("Test indices are out of bounds for the DataFrame.")
 
     def create_train_test_set(self, columns):
 
@@ -103,6 +118,9 @@ class Udava:
 
         self.window_size = window_size
         self.overlap = overlap
+
+        if window_size <= 0:
+            raise ValueError("window_size must be greater than 0") 
 
         self.train_fingerprints, self.train_fp_timestamps = self._create_fingerprints(
             self.train_set,
@@ -209,6 +227,10 @@ class Udava:
 
         """
 
+        valid_methods = ["meanshift", "minibatchkmeans"]
+        if method not in valid_methods:
+            raise ValueError(f"Invalid method '{method}'. Supported methods are: {valid_methods}")
+
         if method == "meanshift":
             self.model = MeanShift()
         else:
@@ -254,7 +276,7 @@ class Udava:
 
         distances = []
 
-        for l, d in zip(fp.train_labels, fp.train_dist):
+        for l, d in zip(self.train_labels, self.train_dist):
             distances.append(d[l])
 
         self.train_distance_to_cluster_center = distances
@@ -502,6 +524,45 @@ class Udava:
     #     self.fit_predict()
     #     self.visualize_clusters()
     #     self.plot_cluster_center_distance("test")
+
+
+def validate_params(params):
+    """Validate parameters from params.yaml."""
+
+    # Validate featurize parameters
+    featurize = params.get("featurize", {})
+    if not isinstance(featurize.get("columns"), (str, list)):
+        raise ValueError("'columns' must be a string or a list of strings.")
+    if not isinstance(featurize.get("convert_timestamp_to_datetime"), bool):
+        raise ValueError("'convert_timestamp_to_datetime' must be a boolean.")
+    if not isinstance(featurize.get("dataset"), str):
+        raise ValueError("'dataset' must be a string.")
+    if not isinstance(featurize.get("overlap"), int) or featurize["overlap"] < 0:
+        raise ValueError("'overlap' must be a non-negative integer.")
+    if not isinstance(featurize.get("timestamp_column"), str):
+        raise ValueError("'timestamp_column' must be a string.")
+    if not isinstance(featurize.get("window_size"), int) or featurize["window_size"] <= 0:
+        raise ValueError("'window_size' must be a positive integer.")
+
+    # Validate postprocess parameters
+    postprocess = params.get("postprocess", {})
+    if not isinstance(postprocess.get("min_segment_length"), int) or postprocess["min_segment_length"] <= 0:
+        raise ValueError("'min_segment_length' must be a positive integer.")
+
+    # Validate train parameters
+    train = params.get("train", {})
+    if train.get("annotations_dir") not in [None, ""] and not isinstance(train["annotations_dir"], str):
+        raise ValueError("'annotations_dir' must be a string or None.")
+    if not isinstance(train.get("fix_predefined_centroids"), bool):
+        raise ValueError("'fix_predefined_centroids' must be a boolean.")
+    if not isinstance(train.get("max_iter"), int) or train["max_iter"] <= 0:
+        raise ValueError("'max_iter' must be a positive integer.")
+    if not isinstance(train.get("n_clusters"), int) or train["n_clusters"] <= 0:
+        raise ValueError("'n_clusters' must be a positive integer.")
+    if not isinstance(train.get("use_predefined_centroids"), bool):
+        raise ValueError("'use_predefined_centroids' must be a boolean.")
+
+    print("All parameters are valid.")
 
 
 if __name__ == "__main__":
