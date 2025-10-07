@@ -1,16 +1,16 @@
 featurize:
-  columns: Channel_4_Data
+  columns: ValueDiff
   convert_timestamp_to_datetime: true
-  dataset: nova10_p8_10hz
+  dataset: meter_1274
   overlap: 0
-  timestamp_column: timestamp
-  window_size: 30
+  timestamp_column: ResultTimeStamp
+  window_size: 35
 postprocess:
   min_segment_length: 1
 train:
-  annotations_dir: nova10_p8_10hz_annotations
+  annotations_dir: none
   fix_predefined_centroids: false
   learning_method: minibatchkmeans
   max_iter: 100
-  n_clusters: 7
+  n_clusters: 10
   use_predefined_centroids: false

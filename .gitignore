@@ -94,3 +94,4 @@ model_tuning/
 models/
 *.pkl
 src/templates/prediction.html
+.github
